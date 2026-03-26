@@ -15,7 +15,9 @@
       <div>
         <span class="menu-item-card__price"> {{ menuItem.price }} ₽ </span>
 
-        <button class="button">
+        <button
+        @click="addToCart(menuItem)"
+        class="button">
           <span class="material-symbols">add</span>
         </button>
       </div>
@@ -25,6 +27,7 @@
 
 <script setup lang="ts">
 import type { TMenuItem } from '@/mocks'
+import { useCartStore } from '@/stores/cart';
 
 defineOptions({
   name: 'MenuItemCard',
@@ -33,6 +36,8 @@ defineOptions({
 const { menuItem } = defineProps<{
   menuItem: TMenuItem
 }>()
+
+const { addToCart } = useCartStore();
 </script>
 
 <style lang="scss">
