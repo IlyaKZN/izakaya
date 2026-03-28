@@ -7,8 +7,8 @@
     <button
     @click="goToPrev"
     class="embla__prev category-preview-list__go-to-button category-preview-list__go-to-button--left">
-      <span class="material-symbols">
-        arrow_back_ios
+      <span class="material-symbols category-preview-list__go-to-button-icon">
+        keyboard_arrow_left
       </span>
     </button>
 
@@ -27,8 +27,8 @@
     <button
     @click="goToNext"
     class="embla__prev category-preview-list__go-to-button category-preview-list__go-to-button--right">
-      <span class="material-symbols">
-        arrow_back_ios
+      <span class="material-symbols category-preview-list__go-to-button-icon">
+        keyboard_arrow_left
       </span>
     </button>
   </div>
@@ -43,7 +43,7 @@ defineOptions({
   name: 'CategoryPreviewList',
 })
 
-const props = defineProps<{
+const { menuList, title } = defineProps<{
   title: string
   menuList: TMenuItem[]
 }>()
@@ -61,9 +61,8 @@ const goToNext = () => emblaApi.value?.scrollNext();
   overflow: hidden;
   max-width: 100%;
   width: 100%;
-  padding: 0 10px;
+  padding: 0 14px;
   position: relative;
-
 }
 
 .category-preview-list__title {
@@ -102,10 +101,19 @@ const goToNext = () => emblaApi.value?.scrollNext();
 
 .category-preview-list__go-to-button {
   position: absolute;
-  height: 50px;
-  width: 50px;
-  border-radius: 50%;
+  height: 40px;
+  width: 40px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(102, 6, 6);
   border: none;
+}
+
+.category-preview-list__go-to-button-icon {
+  font-size: 30px;
+  color: white;
 }
 
 .category-preview-list__go-to-button--left {

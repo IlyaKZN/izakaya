@@ -35,7 +35,7 @@ import CategoriesList from './components/CategoriesList'
 .router-container {
   width: 100vw;
   overflow: hidden;
-  padding: 20px 480px 20px 320px;
+  padding: 20px 390px 20px 300px;
   flex-grow: 1;
   display: flex;
 }
@@ -43,13 +43,13 @@ import CategoriesList from './components/CategoriesList'
 .app_categories-list {
   position: fixed;
   top: 100px;
-  left: 40px;
+  left: 20px;
 }
 
 .app_cart {
   position: fixed;
   top: 100px;
-  right: 40px;
+  right: 20px;
 }
 
 .router {

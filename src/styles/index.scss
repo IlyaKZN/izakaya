@@ -15,3 +15,22 @@ body {
   direction: ltr;
   color: grey;
 }
+
+button {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  position: relative;
+
+  &:hover::after {
+    content: '';
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(white, 0.05);
+    border-radius: 8px;
+  }
+}

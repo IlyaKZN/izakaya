@@ -2,7 +2,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { type TMenuItem } from '@/mocks'
 
-type TCartItem = {
+export type TCartItem = {
   menuItem: TMenuItem
   count: number
 }
@@ -12,8 +12,6 @@ export const useCartStore = defineStore('cart', () => {
 
   function addToCart(item: TMenuItem) {
     if (cartItems.value[item.id]) {
-      console.log(cartItems.value[item.id]);
-
       cartItems.value[item.id]!.count = cartItems.value[item.id]!.count + 1;
     } else {
       cartItems.value[item.id] = {
@@ -23,8 +21,27 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
+  function removeFromCart(item: TMenuItem) {
+    const cartItem = cartItems.value[item.id];
+
+    if (!cartItem) return;
+
+    cartItem.count -= 1;
+    
+    if (cartItem.count === 0) {
+      delete cartItems.value[item.id];
+    }
+  }
+
+  function clear() {
+    cartItems.value = {};
+  }
+
   return {
     cartItems,
+
     addToCart,
+    removeFromCart,
+    clear,
   }
 })

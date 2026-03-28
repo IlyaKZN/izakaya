@@ -3,7 +3,7 @@
     <div class="menu-item-card__image-container">
       <img
         class="menu-item-card__image"
-        src="https://www.russianfood.com/dycontent/images_upl/559/big_558596.jpg"
+        :src="menuItem.preview"
       />
     </div>
 
@@ -12,14 +12,35 @@
 
       <span class="menu-item-card__weight">{{ menuItem.weight }} г</span>
 
-      <div>
+      <div class="menu-item-card__bottom-container">
         <span class="menu-item-card__price"> {{ menuItem.price }} ₽ </span>
 
-        <button
-        @click="addToCart(menuItem)"
-        class="button">
-          <span class="material-symbols">add</span>
-        </button>
+        <div
+        class="menu-item-card__buttons-container"
+        :class="{
+          'menu-item-card__buttons-container-test': !cartItem
+        }">
+            <FadeTransition>
+              <button
+              v-if="cartItem"
+              @click="cartStore.removeFromCart(menuItem)"
+              class="menu-item-card__button menu-item-card__button--remove">
+                <span class="material-symbols">remove</span>
+              </button>
+            </FadeTransition>
+
+            <FadeTransition>
+              <span v-if="cartItem" class="menu-item-card__count">
+                {{ cartItem.count }}
+              </span>
+            </FadeTransition>
+
+          <button
+          @click="cartStore.addToCart(menuItem)"
+          class="menu-item-card__button">
+            <span class="material-symbols">add</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -28,6 +49,9 @@
 <script setup lang="ts">
 import type { TMenuItem } from '@/mocks'
 import { useCartStore } from '@/stores/cart';
+import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
+import FadeTransition from '../transitions/Fade';
 
 defineOptions({
   name: 'MenuItemCard',
@@ -37,14 +61,18 @@ const { menuItem } = defineProps<{
   menuItem: TMenuItem
 }>()
 
-const { addToCart } = useCartStore();
+const cartStore = useCartStore();
+
+const { cartItems } = storeToRefs(cartStore);
+
+const cartItem = computed(() => cartItems.value[menuItem.id]);
 </script>
 
 <style lang="scss">
 .menu-item-card {
   width: 224px;
-  height: 280px;
-  padding: 12px;
+  height: 300px;
+  padding: 8px;
   min-width: 224px;
   display: flex;
   flex-direction: column;
@@ -60,10 +88,11 @@ const { addToCart } = useCartStore();
 
 .menu-item-card__image-container {
   width: 100%;
-  aspect-ratio: 2/1.4;
+  aspect-ratio: 2/1.5;
+  border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .menu-item-card__image {
@@ -78,17 +107,24 @@ const { addToCart } = useCartStore();
   flex-direction: column;
   justify-content: space-between;
   flex-grow: 1;
+  padding: 4px;
 }
 
 .menu-item-card__name {
   font-size: 18px;
   color: white;
   margin-bottom: auto;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .menu-item-card__weight {
   font-size: 16px;
-  color: white;
+  color: rgb(197, 197, 197);
+  margin-bottom: 4px;
 }
 
 .menu-item-card__price {
@@ -96,10 +132,34 @@ const { addToCart } = useCartStore();
   font-size: 18px;
 }
 
-.button {
-  height: 44px;
-  width: 44px;
-  background-color: rgba(200, 16, 49, 0.675);
+.menu-item-card__button {
+  height: 36px;
+  width: 36px;
+  background-color: rgba(255, 0, 47, 0.286);
   cursor: pointer;
+
+  span {
+    color: white;
+  }
+}
+
+.menu-item-card__button--remove {
+  background-color: transparent;
+}
+
+.menu-item-card__bottom-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-item-card__buttons-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-item-card__count {
+  font-size: 18px;
 }
 </style>
