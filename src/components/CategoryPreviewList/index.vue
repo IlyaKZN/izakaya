@@ -1,12 +1,15 @@
-<template>
-  <div class="category-preview-list">
+﻿<template>
+  <section class="category-preview-list">
     <span class="category-preview-list__title">
       {{ title }}
     </span>
 
     <button
-    @click="goToPrev"
-    class="embla__prev category-preview-list__go-to-button category-preview-list__go-to-button--left">
+      @click="goToPrev"
+      class="category-preview-list__go-to-button category-preview-list__go-to-button--left"
+      type="button"
+      aria-label="Прокрутить влево"
+    >
       <span class="material-symbols category-preview-list__go-to-button-icon">
         keyboard_arrow_left
       </span>
@@ -16,8 +19,10 @@
       <div class="embla__viewport" ref="emblaRef">
         <div class="embla__container">
           <div
-          v-for="item in menuList" :key="item.id"
-          class="embla__slide">
+            v-for="item in menuList"
+            :key="item.id"
+            class="embla__slide"
+          >
             <MenuItemCard :menu-item="item" />
           </div>
         </div>
@@ -25,30 +30,33 @@
     </div>
 
     <button
-    @click="goToNext"
-    class="embla__prev category-preview-list__go-to-button category-preview-list__go-to-button--right">
+      @click="goToNext"
+      class="category-preview-list__go-to-button category-preview-list__go-to-button--right"
+      type="button"
+      aria-label="Прокрутить вправо"
+    >
       <span class="material-symbols category-preview-list__go-to-button-icon">
         keyboard_arrow_left
       </span>
     </button>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { type TMenuItem } from '@/mocks'
-import MenuItemCard from '../MenuItemCard'
-import useEmblaCarousel from 'embla-carousel-vue'
+import { type TMenuItem } from '@/mocks';
+import MenuItemCard from '../MenuItemCard';
+import useEmblaCarousel from 'embla-carousel-vue';
 
 defineOptions({
   name: 'CategoryPreviewList',
-})
+});
 
 const { menuList, title } = defineProps<{
-  title: string
-  menuList: TMenuItem[]
-}>()
+  title: string;
+  menuList: TMenuItem[];
+}>();
 
-const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })
+const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true });
 
 const goToPrev = () => emblaApi.value?.scrollPrev();
 const goToNext = () => emblaApi.value?.scrollNext();
@@ -59,34 +67,31 @@ const goToNext = () => emblaApi.value?.scrollNext();
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: 100%;
   width: 100%;
-  padding: 0 14px;
+  padding: 18px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-1);
   position: relative;
 }
 
 .category-preview-list__title {
-  font-size: 30px;
-  color: white;
-  margin-bottom: 12px;
-}
-
-.test {
-  height: max-content;
+  font-size: 26px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  font-weight: 600;
 }
 
 .embla {
-  --slide-size: 224px;
   --slide-spacing: 10px;
 }
 
 .embla__slide {
-  color: white;
   flex: 0 0 224px;
   padding-left: var(--slide-spacing);
   user-select: none;
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none;    /* Firefox */
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .embla__viewport {
@@ -101,14 +106,22 @@ const goToNext = () => emblaApi.value?.scrollNext();
 
 .category-preview-list__go-to-button {
   position: absolute;
-  height: 40px;
-  width: 40px;
-  border-radius: 16px;
+  top: 50%;
+  margin-top: 22px;
+  height: 42px;
+  width: 42px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgb(102, 6, 6);
-  border: none;
+  background: rgba(18, 24, 21, 0.92);
+  border: 1px solid var(--surface-border);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.category-preview-list__go-to-button:hover {
+  background: rgba(24, 32, 28, 0.95);
+  transform: translateY(-1px);
 }
 
 .category-preview-list__go-to-button-icon {
@@ -117,15 +130,31 @@ const goToNext = () => emblaApi.value?.scrollNext();
 }
 
 .category-preview-list__go-to-button--left {
-  top: 50%;
-  left: 0;
+  left: 8px;
   z-index: 2;
 }
 
 .category-preview-list__go-to-button--right {
-  top: 50%;
-  right: 0;
+  right: 8px;
   z-index: 2;
   transform: rotate(180deg);
+}
+
+.category-preview-list__go-to-button--right:hover {
+  transform: rotate(180deg) translateY(1px);
+}
+
+@media (max-width: 900px) {
+  .category-preview-list {
+    padding: 14px 12px;
+  }
+
+  .category-preview-list__title {
+    font-size: 22px;
+  }
+
+  .category-preview-list__go-to-button {
+    display: none;
+  }
 }
 </style>

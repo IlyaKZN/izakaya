@@ -1,21 +1,27 @@
-<template>
+﻿<template>
   <div class="app">
     <TheHeader class="app_header" />
 
     <div class="router-container">
-      <CategoriesList class="app_categories-list" />
+      <aside class="app_categories-list-wrap">
+        <CategoriesList class="app_categories-list" />
+      </aside>
 
-      <RouterView class="router" />
+      <main class="app_main-content">
+        <RouterView class="router" />
+      </main>
 
-      <TheCart class="app_cart" />
+      <aside class="app_cart-wrap">
+        <TheCart class="app_cart" />
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import TheHeader from './components/TheHeader'
-import TheCart from './components/Cart'
-import CategoriesList from './components/CategoriesList'
+import TheHeader from './components/TheHeader';
+import TheCart from './components/Cart';
+import CategoriesList from './components/CategoriesList';
 </script>
 
 <style lang="scss">
@@ -23,33 +29,56 @@ import CategoriesList from './components/CategoriesList'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: black;
-  overflow: hidden;
 }
 
 .app_header {
-  position: fixed;
+  position: sticky;
   top: 0;
   left: 0;
+  z-index: 30;
 }
 
 .router-container {
-  width: 100vw;
-  overflow: hidden;
-  padding: 20px 390px 20px 300px;
-  flex-grow: 1;
-  display: flex;
+  width: 100%;
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 24px;
 }
 
-.app_categories-list {
-  position: fixed;
-  top: 100px;
-  left: 20px;
+.app_categories-list-wrap,
+.app_cart-wrap {
+  position: sticky;
+  top: 104px;
 }
 
-.app_cart {
-  position: fixed;
-  top: 100px;
-  right: 20px;
+.app_main-content {
+  min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .router-container {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .app_cart-wrap {
+    grid-column: 1 / -1;
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .router-container {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .app_categories-list-wrap,
+  .app_cart-wrap {
+    position: static;
+  }
 }
 </style>

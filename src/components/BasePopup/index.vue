@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <teleport to="body">
     <transition name="popup-fade">
       <div
@@ -109,3 +109,4 @@ const handleOverlayClick = () => {
   opacity: 0;
 }
 </style>
+
