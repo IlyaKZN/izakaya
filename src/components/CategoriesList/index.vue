@@ -7,6 +7,8 @@
       :key="category"
       type="button"
       class="categories-list__item"
+      :class="{ 'categories-list__item--active': selectedCategory === category }"
+      @click="selectedCategory = category"
     >
       {{ category }}
     </button>
@@ -14,20 +16,15 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import { useCatalogStore } from '@/stores/catalog';
+
 defineOptions({
   name: 'CategoriesList',
 });
 
-const categories = [
-  'Популярное',
-  'Фо и супы',
-  'Бань ми',
-  'Рис и лапша',
-  'Горячие блюда',
-  'Спринг-роллы',
-  'Напитки',
-  'Десерты',
-];
+const catalogStore = useCatalogStore();
+const { categories, selectedCategory } = storeToRefs(catalogStore);
 </script>
 
 <style lang="scss">
@@ -64,6 +61,11 @@ const categories = [
     background: var(--surface-2);
     color: #fff;
   }
+}
+
+.categories-list__item--active {
+  background: rgba(127, 46, 67, 0.3);
+  border: 1px solid rgba(127, 46, 67, 0.5);
 }
 
 @media (max-width: 900px) {

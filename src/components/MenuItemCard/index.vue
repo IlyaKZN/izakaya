@@ -1,6 +1,17 @@
 ﻿<template>
   <div class="menu-item-card">
     <div @click="goToItem" class="menu-item-card__image-container">
+      <div v-if="menuItem.badges?.length" class="menu-item-card__badges">
+        <span
+          v-for="badge in menuItem.badges"
+          :key="badge"
+          class="menu-item-card__badge"
+          :class="`menu-item-card__badge--${badge}`"
+        >
+          {{ badgeTitles[badge] }}
+        </span>
+      </div>
+
       <img
         class="menu-item-card__image"
         :src="menuItem.preview"
@@ -69,6 +80,11 @@ const cartStore = useCartStore();
 const { cartItems } = storeToRefs(cartStore);
 
 const cartItem = computed(() => cartItems.value[menuItem.id]);
+const badgeTitles = {
+  new: 'NEW',
+  hit: 'ХИТ',
+  spicy: 'ОСТРОЕ',
+};
 
 function goToItem() {
   router.push({
@@ -105,6 +121,7 @@ function goToItem() {
 }
 
 .menu-item-card__image-container {
+  position: relative;
   width: 100%;
   aspect-ratio: 2/1.5;
   border-radius: 12px;
@@ -112,6 +129,37 @@ function goToItem() {
   cursor: pointer;
   margin-bottom: 12px;
   background: rgba(0, 0, 0, 0.2);
+}
+
+.menu-item-card__badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+}
+
+.menu-item-card__badge {
+  height: 22px;
+  border-radius: 999px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.menu-item-card__badge--new {
+  background: rgba(59, 109, 176, 0.9);
+}
+
+.menu-item-card__badge--hit {
+  background: rgba(127, 46, 67, 0.9);
+}
+
+.menu-item-card__badge--spicy {
+  background: rgba(176, 88, 51, 0.9);
 }
 
 .menu-item-card__image {
