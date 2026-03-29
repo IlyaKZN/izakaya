@@ -24,11 +24,8 @@ defineOptions({
   padding-top: 100px;
   background-color: black;
   flex-grow: 1;
-  height: 2000px;
   overflow: hidden;
   width: 100%;
-  // max-width: 1000px;
-  // width: 100%;
 }
 
 .main-screen__category-preview-list {

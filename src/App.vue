@@ -24,6 +24,7 @@ import CategoriesList from './components/CategoriesList'
   display: flex;
   flex-direction: column;
   background-color: black;
+  overflow: hidden;
 }
 
 .app_header {
@@ -50,8 +51,5 @@ import CategoriesList from './components/CategoriesList'
   position: fixed;
   top: 100px;
   right: 20px;
-}
-
-.router {
 }
 </style>

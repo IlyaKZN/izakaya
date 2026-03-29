@@ -1,6 +1,6 @@
 <template>
   <div class="menu-item-card">
-    <div class="menu-item-card__image-container">
+    <div @click="goToItem" class="menu-item-card__image-container">
       <img
         class="menu-item-card__image"
         :src="menuItem.preview"
@@ -8,7 +8,7 @@
     </div>
 
     <div class="menu-item-card__info">
-      <span class="menu-item-card__name">{{ menuItem.name }}</span>
+      <span @click="goToItem" class="menu-item-card__name">{{ menuItem.name }}</span>
 
       <span class="menu-item-card__weight">{{ menuItem.weight }} г</span>
 
@@ -52,6 +52,7 @@ import { useCartStore } from '@/stores/cart';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import FadeTransition from '../transitions/Fade';
+import { useRouter } from 'vue-router';
 
 defineOptions({
   name: 'MenuItemCard',
@@ -61,11 +62,22 @@ const { menuItem } = defineProps<{
   menuItem: TMenuItem
 }>()
 
+const router = useRouter();
+
 const cartStore = useCartStore();
 
 const { cartItems } = storeToRefs(cartStore);
 
 const cartItem = computed(() => cartItems.value[menuItem.id]);
+
+function goToItem() {
+  router.push({
+    name: 'menu-item',
+    params: {
+      id: menuItem.id,
+    }
+  })
+}
 </script>
 
 <style lang="scss">

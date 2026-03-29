@@ -1,16 +1,22 @@
 <template>
-  <div class="cart">
-    <span class="cart__title">
-      Корзина
-    </span>
+  <div class="cart-container">
+    <div class="cart__address">
 
-    <template :key="cartItem.menuItem.id" v-for="(cartItem, id, index) in cartItems">
-      <CartItem :item="cartItem"/>
+    </div>
 
-      <div
-      v-if="index !== Object.values(cartItems).length - 1"
-      class="cart__separator"/>
-    </template>
+    <div class="cart">
+      <span class="cart__title">
+        Корзина
+      </span>
+  
+      <template :key="cartItem.menuItem.id" v-for="(cartItem, id, index) in cartItems">
+        <CartItem :item="cartItem"/>
+  
+        <div
+        v-if="index !== Object.values(cartItems).length - 1"
+        class="cart__separator"/>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -29,9 +35,25 @@
 </script>
 
 <style lang="scss">
+  .cart-container {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cart__address {
+    height: 40px;
+    cursor: pointer;
+    border-radius: 12px;
+    width: 100%;
+    background-color: rgba(white, 0.08);
+    border: 1px solid rgba(40, 40, 40);
+  }
+  
   .cart {
-    width: 360px;
     min-height: 300px;
+    width: 100%;
     background-color: rgba(white, 0.08);
     border: 1px solid rgba(40, 40, 40);
     padding: 16px;
