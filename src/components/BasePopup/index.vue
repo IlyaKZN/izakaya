@@ -8,6 +8,7 @@
       >
         <div
           class="base-popup__content"
+          :class="contentClass"
           role="dialog"
           aria-modal="true"
           @click.stop
@@ -34,6 +35,7 @@ const props = withDefaults(
     modelValue: boolean;
     closeOnOverlay?: boolean;
     showCloseButton?: boolean;
+    contentClass?: string;
   }>(),
   {
     closeOnOverlay: true,

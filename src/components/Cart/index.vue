@@ -1,15 +1,15 @@
 ﻿<template>
   <div class="cart-container">
-    <button type="button" class="cart__address">
+    <button type="button" class="cart__address" @click="isAddressPopupOpen = true">
       <span class="material-symbols">location_on</span>
-      <span>Адрес доставки</span>
+      <span>{{ deliveryAddress }}</span>
     </button>
 
     <div class="cart">
       <span class="cart__title">Корзина</span>
 
       <div v-if="cartItemList.length === 0" class="cart__empty-state">
-        Пока пусто. Добавьте роллы из каталога.
+        Пока пусто. Добавьте блюда из каталога.
       </div>
 
       <template v-for="(cartItem, index) in cartItemList" :key="cartItem.menuItem.id">
@@ -26,14 +26,20 @@
         <span class="cart__total-value">{{ totalPrice }} ₽</span>
       </div>
     </div>
+
+    <AddressPopup
+      v-model="isAddressPopupOpen"
+      @confirm="handleAddressConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { storeToRefs } from 'pinia';
 import CartItem from '../CartItem';
+import AddressPopup from '../AddressPopup';
 
 defineOptions({
   name: 'TheCart',
@@ -41,12 +47,18 @@ defineOptions({
 
 const cartStore = useCartStore();
 const { cartItems } = storeToRefs(cartStore);
+const isAddressPopupOpen = ref(false);
+const deliveryAddress = ref('Адрес доставки');
 
 const cartItemList = computed(() => Object.values(cartItems.value));
 
 const totalPrice = computed(() =>
   cartItemList.value.reduce((sum, item) => sum + item.menuItem.price * item.count, 0),
 );
+
+const handleAddressConfirm = (address: string) => {
+  deliveryAddress.value = address;
+};
 </script>
 
 <style lang="scss">
