@@ -393,4 +393,53 @@ function goToMain() {
     font-size: 28px;
   }
 }
+
+@media (max-width: 640px) {
+  .menu-item-screen__content {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .menu-item-screen__preview {
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .menu-item-screen__back-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .menu-item-screen__name,
+  .menu-item-screen__price {
+    font-size: 24px;
+  }
+
+  .menu-item-screen__description,
+  .menu-item-screen__ingredient {
+    font-size: 14px;
+  }
+
+  .menu-item-screen__variant-list {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .menu-item-screen__variant-button {
+    min-width: 0;
+  }
+
+  .menu-item-screen__add-container,
+  .menu-item-screen__change-count-button-container {
+    width: 100%;
+  }
+
+  .menu-item-screen__add-to-cart-button {
+    width: 100%;
+  }
+
+  .menu-item-screen__change-count-button-container {
+    justify-content: space-between;
+  }
+}
 </style>

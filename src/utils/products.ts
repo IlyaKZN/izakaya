@@ -1,6 +1,12 @@
 import type { ProductRead, ProductVariantRead } from '@/types/api'
 
 const FALLBACK_IMAGE = 'https://www.gastronom.ru/recipe/26529/fo-bo-govjazhij-sup-s-lapshoj'
+const PRODUCT_IMAGE_BASE_PATH = '/static/img/products'
+const PRODUCT_IMAGE_THUMBNAIL_BASE_PATH = '/static/img/products thumbnail'
+
+type ProductImageOptions = {
+  thumbnail?: boolean
+}
 
 function parsePrice(price: string | null | undefined) {
   if (!price) return null
@@ -23,8 +29,26 @@ export function getProductVariantById(product: ProductRead, variantId?: string |
   return product.variants.find((variant) => variant.id === variantId) ?? null
 }
 
-export function getProductImage(product: ProductRead) {
-  return product.image_url || FALLBACK_IMAGE
+function resolveProductImagePath(imageUrl?: string | null, options: ProductImageOptions = {}) {
+  if (!imageUrl) return FALLBACK_IMAGE
+
+  if (/^(https?:)?\/\//i.test(imageUrl)) {
+    return imageUrl
+  }
+
+  if (imageUrl.startsWith('/')) {
+    return imageUrl
+  }
+
+  const prefix = options.thumbnail
+    ? PRODUCT_IMAGE_THUMBNAIL_BASE_PATH
+    : PRODUCT_IMAGE_BASE_PATH
+
+  return `${prefix}/${imageUrl}`
+}
+
+export function getProductImage(product: ProductRead, options?: ProductImageOptions) {
+  return resolveProductImagePath(product.image_url, options)
 }
 
 export function getProductPrice(product: ProductRead, variant?: ProductVariantRead | null) {

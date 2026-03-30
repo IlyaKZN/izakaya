@@ -8,7 +8,11 @@
       </aside>
 
       <main class="app_main-content">
-        <RouterView class="router" />
+        <RouterView v-slot="{ Component, route }">
+          <Transition :name="String(route.meta.transition ?? 'page-slide')" mode="out-in">
+            <component :is="Component" :key="route.fullPath" class="router" />
+          </Transition>
+        </RouterView>
       </main>
 
       <aside class="app_cart-wrap">
@@ -87,6 +91,33 @@ watch(isAuthenticated, () => {
 
 .app_main-content {
   min-width: 0;
+  position: relative;
+}
+
+.router {
+  width: 100%;
+}
+
+.page-slide-enter-active,
+.page-slide-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    filter 0.28s ease;
+  transform-origin: center top;
+  will-change: opacity, transform, filter;
+}
+
+.page-slide-enter-from {
+  opacity: 0;
+  transform: translateY(18px) scale(0.985);
+  filter: blur(6px);
+}
+
+.page-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.99);
+  filter: blur(4px);
 }
 
 @media (max-width: 1280px) {
@@ -104,11 +135,20 @@ watch(isAuthenticated, () => {
   .router-container {
     grid-template-columns: 1fr;
     padding: 16px;
+    gap: 16px;
   }
 
   .app_categories-list-wrap,
   .app_cart-wrap {
     position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .router-container {
+    padding: 12px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    gap: 12px;
   }
 }
 </style>

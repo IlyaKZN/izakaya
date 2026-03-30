@@ -2,7 +2,7 @@
   <div class="cart-container">
     <button type="button" class="cart__address" @click="isAddressPopupOpen = true">
       <span class="material-symbols">location_on</span>
-      <span>{{ deliveryAddress }}</span>
+      <span>{{ deliveryAddressLabel }}</span>
     </button>
 
     <div class="cart">
@@ -45,6 +45,31 @@
           placeholder="Телефон получателя"
         />
       </div>
+
+      <div v-if="cartItemList.length" class="cart__grid">
+        <label class="cart__field">
+          <span class="cart__field-label">Количество персон</span>
+          <input v-model.number="persons" class="cart__field-input" type="number" min="1" max="20" />
+        </label>
+
+        <label class="cart__field">
+          <span class="cart__field-label">Способ оплаты</span>
+          <select v-model="paymentMethod" class="cart__field-input cart__field-input--select">
+            <option value="cash">Наличными</option>
+            <option value="card">Картой курьеру</option>
+            <option value="online">Онлайн</option>
+          </select>
+        </label>
+      </div>
+
+      <label v-if="cartItemList.length" class="cart__field">
+        <span class="cart__field-label">Комментарий к заказу</span>
+        <textarea
+          v-model.trim="orderComment"
+          class="cart__textarea"
+          placeholder="Например, не звонить в домофон, оставить приборы на 2 персоны"
+        />
+      </label>
 
       <div v-if="cartItemList.length" class="cart__promo">
         <input v-model.trim="promoCode" class="cart__field-input" placeholder="Промокод" />
@@ -90,6 +115,13 @@
         Минимальная сумма для доставки: {{ minDeliveryOrder }} ₽
       </div>
 
+      <div
+        v-if="orderMode === 'delivery' && cartItemList.length > 0 && !selectedAddress"
+        class="cart__notice"
+      >
+        Выберите адрес доставки, чтобы оформить заказ.
+      </div>
+
       <div v-if="checkoutError" class="cart__notice cart__notice--error">
         {{ checkoutError }}
       </div>
@@ -109,17 +141,23 @@
       </button>
     </div>
 
-    <AddressPopup v-model="isAddressPopupOpen" @confirm="handleAddressConfirm" />
+    <AddressPopup
+      v-model="isAddressPopupOpen"
+      :initial-address="selectedAddress"
+      @confirm="handleAddressConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore } from '@/stores/orders'
+import { useUsersStore } from '@/stores/users'
 import CartItem from '../CartItem'
 import AddressPopup from '../AddressPopup'
+import type { CheckoutAddress } from '../AddressPopup'
 import { getProductPrice } from '@/utils/products'
 
 defineOptions({
@@ -135,12 +173,17 @@ const PROMO_DISCOUNTS: Record<string, number> = {
 
 const cartStore = useCartStore()
 const ordersStore = useOrdersStore()
+const usersStore = useUsersStore()
 const { cartItemList } = storeToRefs(cartStore)
+const { profile } = storeToRefs(usersStore)
 
 const isAddressPopupOpen = ref(false)
-const deliveryAddress = ref('Адрес доставки')
+const selectedAddress = ref<CheckoutAddress | null>(null)
 const orderMode = ref<TOrderMode>('delivery')
 const recipientPhone = ref('')
+const persons = ref(1)
+const paymentMethod = ref<'cash' | 'card' | 'online'>('cash')
+const orderComment = ref('')
 const promoCode = ref('')
 const appliedPromoPercent = ref(0)
 const useBonuses = ref(false)
@@ -149,6 +192,7 @@ const checkoutError = ref('')
 const checkoutSuccessMessage = ref('')
 
 const minDeliveryOrder = 800
+const deliveryAddressLabel = computed(() => selectedAddress.value?.label || 'Адрес доставки')
 
 const subtotal = computed(() =>
   cartItemList.value.reduce(
@@ -182,12 +226,23 @@ const isCheckoutDisabled = computed(
   () =>
     isSubmittingOrder.value ||
     cartItemList.value.length === 0 ||
-    !recipientPhone.value ||
-    (orderMode.value === 'delivery' && subtotal.value < minDeliveryOrder),
+    !normalizePhone(recipientPhone.value) ||
+    persons.value < 1 ||
+    (orderMode.value === 'delivery' &&
+      (!selectedAddress.value || subtotal.value < minDeliveryOrder)),
 )
 
-const handleAddressConfirm = (address: string) => {
-  deliveryAddress.value = address
+const normalizePhone = (phone: string) => {
+  const digits = phone.replace(/\D/g, '')
+
+  if (!digits) return ''
+  if (digits.startsWith('8')) return `7${digits.slice(1)}`
+  if (digits.startsWith('7')) return digits
+  return `7${digits}`
+}
+
+const handleAddressConfirm = (address: CheckoutAddress) => {
+  selectedAddress.value = address
 }
 
 const applyPromoCode = () => {
@@ -195,8 +250,33 @@ const applyPromoCode = () => {
   appliedPromoPercent.value = PROMO_DISCOUNTS[normalized] ?? 0
 }
 
+const buildOrderComment = () => {
+  const commentParts = [orderComment.value.trim()]
+
+  if (orderMode.value === 'pickup') {
+    commentParts.unshift('Самовывоз')
+  }
+
+  if (selectedAddress.value?.intercom) {
+    commentParts.push(`Домофон: ${selectedAddress.value.intercom}`)
+  }
+
+  if (selectedAddress.value?.privateHouse) {
+    commentParts.push('Частный дом')
+  }
+
+  return commentParts.filter(Boolean).join('. ') || null
+}
+
 const submitOrder = async () => {
   if (isCheckoutDisabled.value) return
+
+  const normalizedPhone = normalizePhone(recipientPhone.value)
+
+  if (!normalizedPhone) {
+    checkoutError.value = 'Введите корректный телефон получателя.'
+    return
+  }
 
   isSubmittingOrder.value = true
   checkoutError.value = ''
@@ -204,18 +284,23 @@ const submitOrder = async () => {
 
   try {
     const order = await ordersStore.createOrder({
-      recipient_phone: recipientPhone.value,
-      persons: 1,
-      payment_method: 'cash',
+      address: orderMode.value === 'delivery' ? selectedAddress.value : null,
+      recipient_phone: `+${normalizedPhone}`,
+      persons: persons.value,
+      payment_method: paymentMethod.value,
       promocode: promoCode.value || null,
-      comment: orderMode.value === 'pickup' ? 'Самовывоз' : null,
+      comment: buildOrderComment(),
       items: cartStore.toOrderItems(),
     })
 
     cartStore.clear()
+    orderComment.value = ''
     promoCode.value = ''
     appliedPromoPercent.value = 0
     useBonuses.value = false
+    if (orderMode.value === 'pickup') {
+      selectedAddress.value = null
+    }
     checkoutSuccessMessage.value = `Заказ ${order.id} успешно создан`
   } catch (error) {
     checkoutError.value = error instanceof Error ? error.message : 'Не удалось оформить заказ'
@@ -223,6 +308,30 @@ const submitOrder = async () => {
     isSubmittingOrder.value = false
   }
 }
+
+watch(
+  profile,
+  (nextProfile) => {
+    if (!nextProfile) return
+
+    if (!recipientPhone.value) {
+      recipientPhone.value = nextProfile.phone
+    }
+
+    if (!selectedAddress.value && nextProfile.last_address) {
+      selectedAddress.value = {
+        ...nextProfile.last_address,
+        label: [nextProfile.last_address.street, nextProfile.last_address.house]
+          .filter(Boolean)
+          .join(', '),
+        intercom: null,
+        privateHouse: false,
+        saveAddress: true,
+      }
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style lang="scss">
@@ -244,6 +353,14 @@ const submitOrder = async () => {
   background: var(--surface-1);
   border: 1px solid var(--surface-border);
   color: var(--text-secondary);
+  min-width: 0;
+
+  span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 }
 
 .cart {
@@ -299,6 +416,23 @@ const submitOrder = async () => {
   gap: 8px;
 }
 
+.cart__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.cart__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cart__field-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
 .cart__field-input {
   height: 38px;
   border-radius: 10px;
@@ -308,6 +442,21 @@ const submitOrder = async () => {
   padding: 0 10px;
   outline: none;
   width: 100%;
+}
+
+.cart__field-input--select {
+  appearance: none;
+}
+
+.cart__textarea {
+  min-height: 82px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 10px;
+  font: inherit;
 }
 
 .cart__promo-button {
@@ -384,5 +533,38 @@ const submitOrder = async () => {
   height: 1px;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .cart {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .cart__title {
+    font-size: 22px;
+  }
+
+  .cart__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cart__promo {
+    grid-template-columns: 1fr;
+  }
+
+  .cart__promo-button,
+  .cart__checkout {
+    height: 42px;
+  }
+
+  .cart__summary-row {
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .cart__summary-row--total {
+    font-size: 18px;
+  }
 }
 </style>

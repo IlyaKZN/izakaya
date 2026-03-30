@@ -163,6 +163,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import BasePopup from '@/components/BasePopup'
+import type { OrderAddressInput } from '@/types/api'
+import type { CheckoutAddress } from './types'
 import {
   KAZAN_BOUNDS,
   KAZAN_CENTER,
@@ -179,11 +181,12 @@ defineOptions({
 
 const props = defineProps<{
   modelValue: boolean
+  initialAddress?: CheckoutAddress | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'confirm', value: string): void
+  (e: 'confirm', value: CheckoutAddress): void
 }>()
 
 const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY?.trim() ?? ''
@@ -197,16 +200,18 @@ const addressLookupError = ref('')
 const selectedAddressLabel = ref('')
 
 const form = reactive({
-  street: 'Кремлевская улица, 27',
+  street: '',
   block: '',
   entrance: '',
   intercom: '',
   floor: '',
-  apartment: '1',
+  apartment: '',
   privateHouse: false,
   note: '',
   saveAddress: false,
 })
+
+const addressCoordinates = ref<[number, number] | null>(null)
 
 let ymaps: YandexMapsApi | null = null
 let map: YandexMapInstance | null = null
@@ -229,8 +234,75 @@ const applySelectedAddress = (address: string, coordinates?: [number, number]) =
   selectedAddressLabel.value = normalizedAddress
 
   if (coordinates) {
+    addressCoordinates.value = coordinates
     updatePlacemark(coordinates, normalizedAddress)
     map?.setCenter(coordinates, 16, { duration: 250 })
+  }
+}
+
+const splitStreetAndHouse = (value: string) => {
+  const normalized = normalizeAddressLabel(value)
+  const match = normalized.match(/^(.*?),(?:\s*)дом\s+(.+)$/i)
+
+  if (match) {
+    return {
+      street: match[1]?.trim() ?? normalized,
+      house: match[2]?.trim() ?? '',
+    }
+  }
+
+  const fallbackMatch = normalized.match(/^(.*?)[,\s]+(\d+[A-Za-zА-Яа-я0-9/-]*)$/)
+
+  if (fallbackMatch) {
+    return {
+      street: fallbackMatch[1]?.trim() ?? normalized,
+      house: fallbackMatch[2]?.trim() ?? '',
+    }
+  }
+
+  return {
+    street: normalized,
+    house: '',
+  }
+}
+
+const toOrderAddress = (): CheckoutAddress => {
+  const { street, house } = splitStreetAndHouse(form.street)
+
+  return {
+    city: 'Казань',
+    street,
+    house: [house, form.block.trim()].filter(Boolean).join(', корп. '),
+    apartment: form.privateHouse ? null : form.apartment.trim() || null,
+    entrance: form.entrance.trim() || null,
+    floor: form.floor.trim() || null,
+    comment: form.note.trim() || null,
+    lat: addressCoordinates.value?.[1] ?? null,
+    lng: addressCoordinates.value?.[0] ?? null,
+    label: form.street.trim(),
+    intercom: form.intercom.trim() || null,
+    privateHouse: form.privateHouse,
+    saveAddress: form.saveAddress,
+  }
+}
+
+const fillFormFromAddress = (address?: CheckoutAddress | null) => {
+  form.street = address?.label || [address?.street, address?.house].filter(Boolean).join(', ')
+  form.block = ''
+  form.entrance = address?.entrance || ''
+  form.intercom = address?.intercom || ''
+  form.floor = address?.floor || ''
+  form.apartment = address?.apartment || ''
+  form.privateHouse = Boolean(address?.privateHouse)
+  form.note = address?.comment || ''
+  form.saveAddress = Boolean(address?.saveAddress)
+  addressCoordinates.value =
+    address?.lng != null && address.lat != null ? [address.lng, address.lat] : null
+  selectedAddressLabel.value = form.street
+
+  if (addressCoordinates.value && placemark) {
+    updatePlacemark(addressCoordinates.value, form.street)
+    map?.setCenter(addressCoordinates.value, 16, { duration: 0 })
   }
 }
 
@@ -370,7 +442,7 @@ const initMap = async () => {
 }
 
 const confirmAddress = () => {
-  emit('confirm', form.street)
+  emit('confirm', toOrderAddress())
   emit('update:modelValue', false)
 }
 
@@ -380,6 +452,7 @@ watch(
     if (!isOpen) return
 
     await nextTick()
+    fillFormFromAddress(props.initialAddress)
     await initMap()
     map?.container?.fitToViewport?.()
   },

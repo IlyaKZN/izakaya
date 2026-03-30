@@ -1,10 +1,10 @@
 ﻿<template>
   <header class="header">
     <div class="header__inner">
-      <div class="header__brand">
+      <RouterLink class="header__brand" :to="{ name: 'main' }" aria-label="Перейти на главную">
         <span class="header__brand-mark">Viet Kitchen</span>
         <span class="header__brand-subtitle">доставка вьетнамской кухни</span>
-      </div>
+      </RouterLink>
 
       <label class="header__search">
         <span class="material-symbols">search</span>
@@ -22,6 +22,13 @@
         </div>
       </div>
 
+      <nav class="header__nav" aria-label="Основная навигация">
+        <RouterLink class="header__nav-link" :to="{ name: 'main' }">
+          <span class="material-symbols">restaurant_menu</span>
+          <span>Меню</span>
+        </RouterLink>
+      </nav>
+
       <div class="header__auth">
         <button
           v-if="!isAuthenticated"
@@ -34,6 +41,11 @@
         </button>
 
         <div v-else class="header__profile">
+          <RouterLink class="header__profile-link" :to="{ name: 'profile' }">
+            <span class="material-symbols">account_circle</span>
+            <span>Профиль</span>
+          </RouterLink>
+
           <div class="header__profile-meta">
             <span class="header__profile-name">{{ profileName }}</span>
             <span class="header__profile-phone">{{ profilePhone }}</span>
@@ -58,6 +70,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { RouterLink } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
 import AuthPopup from '@/components/AuthPopup'
 import { useAuthStore } from '@/stores/auth'
@@ -114,6 +127,8 @@ const handleLogout = async () => {
   display: flex;
   flex-direction: column;
   min-width: 220px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .header__brand-mark {
@@ -159,6 +174,29 @@ const handleLogout = async () => {
   gap: 12px;
 }
 
+.header__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header__nav-link {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.router-link-active.header__nav-link,
+.router-link-active.header__profile-link {
+  background: rgba(127, 46, 67, 0.35);
+}
+
 .header__meta-item {
   display: flex;
   align-items: center;
@@ -175,6 +213,7 @@ const handleLogout = async () => {
   margin-left: auto;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .header__auth-button,
@@ -201,6 +240,18 @@ const handleLogout = async () => {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.header__profile-link {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
 }
 
 .header__profile-meta {
@@ -261,6 +312,106 @@ const handleLogout = async () => {
 
   .header__auth {
     margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .header__nav {
+    margin-left: auto;
+  }
+
+  .header__profile {
+    max-width: 100%;
+  }
+
+  .header__profile-meta {
+    overflow: hidden;
+  }
+
+  .header__profile-name,
+  .header__profile-phone {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .header__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 12px;
+  }
+
+  .header__brand {
+    min-width: 0;
+  }
+
+  .header__brand-mark {
+    font-size: 18px;
+  }
+
+  .header__nav {
+    margin-left: 0;
+  }
+
+  .header__nav-link,
+  .header__auth-button,
+  .header__profile-link,
+  .header__logout-button {
+    height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .header__profile {
+    width: 100%;
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    gap: 8px;
+    padding-left: 8px;
+  }
+
+  .header__auth {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .header__profile-meta {
+    flex: 1;
+  }
+
+  .header__search {
+    order: initial;
+    grid-column: 1 / -1;
+    height: 42px;
+    flex-basis: auto;
+  }
+
+  .header__nav-link span:last-child,
+  .header__profile-link span:last-child,
+  .header__auth-button span:last-child {
+    display: none;
+  }
+
+  .header__nav-link,
+  .header__profile-link,
+  .header__auth-button {
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .header__logout-button {
+    white-space: nowrap;
   }
 }
 </style>

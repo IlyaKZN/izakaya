@@ -53,7 +53,7 @@ const { item } = defineProps<{
 }>()
 
 const cartStore = useCartStore()
-const productImage = computed(() => getProductImage(item.menuItem))
+const productImage = computed(() => getProductImage(item.menuItem, { thumbnail: true }))
 const totalPrice = computed(() => getProductPrice(item.menuItem, item.selectedVariant) * item.count)
 const variantLabel = computed(() =>
   item.selectedVariant ? formatVariant(item.selectedVariant) : null,
@@ -122,6 +122,38 @@ const variantLabel = computed(() =>
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.18);
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-item {
+    gap: 10px;
+  }
+
+  .cart-item__image {
+    width: 84px;
+    height: 84px;
+  }
+
+  .cart-item__name {
+    font-size: 14px;
+  }
+
+  .cart-item__variant {
+    font-size: 12px;
+  }
+
+  .cart-item__price {
+    font-size: 16px;
+  }
+
+  .cart-item__count-container {
+    gap: 6px;
+  }
+
+  .cart-item__button {
+    width: 26px;
+    height: 26px;
   }
 }
 </style>

@@ -85,4 +85,33 @@ onMounted(() => {
     grid-column: 1 / -1;
   }
 }
+
+@media (max-width: 640px) {
+  .categories-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 12px;
+    scrollbar-width: none;
+  }
+
+  .categories-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .categories-list__title {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-bottom: 2px;
+  }
+
+  .categories-list__item {
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+}
 </style>

@@ -65,7 +65,7 @@ const cartStore = useCartStore()
 
 const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
 const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
-const productImage = computed(() => getProductImage(menuItem))
+const productImage = computed(() => getProductImage(menuItem, { thumbnail: true }))
 const productPrice = computed(() => formatProductPrice(menuItem, defaultVariant.value))
 const weightLabel = computed(() => getProductWeight(menuItem, defaultVariant.value))
 const menuDescription = computed(
