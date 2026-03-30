@@ -343,6 +343,7 @@ watch(
   flex-direction: column;
   gap: 12px;
   max-height: calc(100vh - 128px);
+  min-height: 0;
 }
 
 .cart__address {
@@ -376,17 +377,16 @@ watch(
   flex-direction: column;
   gap: 14px;
   min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 12px;
+  scrollbar-gutter: stable;
 }
 
 .cart__items {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 4px;
-  margin-right: -4px;
 }
 
 .cart__title {
@@ -550,16 +550,16 @@ watch(
   flex-shrink: 0;
 }
 
-.cart__items::-webkit-scrollbar {
+.cart::-webkit-scrollbar {
   width: 6px;
 }
 
-.cart__items::-webkit-scrollbar-thumb {
+.cart::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.18);
   border-radius: 999px;
 }
 
-.cart__items::-webkit-scrollbar-track {
+.cart::-webkit-scrollbar-track {
   background: transparent;
 }
 

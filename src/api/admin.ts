@@ -17,6 +17,13 @@ export function updateProduct(productId: Uuid, payload: ProductUpdate) {
   return patchRequest<ProductRead>(`/api/v1/admin/products/${productId}`, payload)
 }
 
+export function uploadProductImage(productId: Uuid, image: File) {
+  const formData = new FormData()
+  formData.append('image', image)
+
+  return postRequest<ProductRead>(`/api/v1/admin/products/${productId}/image`, formData)
+}
+
 export function listOrders(status?: string | null) {
   return getRequest<OrderRead[]>('/api/v1/admin/orders', { status })
 }

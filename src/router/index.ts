@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const MainScreen = () => import('@/screens/Main')
+const CategoryScreen = () => import('@/screens/Category')
 const MenuItemScreen = () => import('@/screens/MenuItem')
 const ProfileScreen = () => import('@/screens/Profile')
 const AdminScreen = () => import('@/screens/Admin')
@@ -38,6 +39,14 @@ const router = createRouter({
       name: 'menu-item',
       path: '/product/:id',
       component: MenuItemScreen,
+      meta: {
+        transition: 'page-slide',
+      },
+    },
+    {
+      name: 'category',
+      path: '/category/:category',
+      component: CategoryScreen,
       meta: {
         transition: 'page-slide',
       },

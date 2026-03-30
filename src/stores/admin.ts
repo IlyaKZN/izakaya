@@ -43,6 +43,13 @@ export const useAdminStore = defineStore('admin', () => {
     return response
   }
 
+  async function uploadProductImage(productId: Uuid, image: File) {
+    const response = await adminApi.uploadProductImage(productId, image)
+    upsertProduct(response)
+
+    return response
+  }
+
   async function fetchOrders(status?: string | null) {
     const response = await adminApi.listOrders(status)
     adminOrders.value = response
@@ -75,6 +82,7 @@ export const useAdminStore = defineStore('admin', () => {
     lastSiteToggleResult,
     createProduct,
     updateProduct,
+    uploadProductImage,
     fetchOrders,
     updateOrderStatus,
     toggleSite,

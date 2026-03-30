@@ -1,10 +1,17 @@
 <template>
   <section class="category-preview-list">
-    <span class="category-preview-list__title">
-      {{ title }}
-    </span>
+    <div class="category-preview-list__header">
+      <button type="button" class="category-preview-list__title" @click="goToCategory">
+        {{ title }}
+      </button>
+
+      <button type="button" class="category-preview-list__link" @click="goToCategory">
+        Смотреть все
+      </button>
+    </div>
 
     <button
+      v-if="hasOverflow"
       @click="goToPrev"
       class="category-preview-list__go-to-button category-preview-list__go-to-button--left"
       type="button"
@@ -26,6 +33,7 @@
     </div>
 
     <button
+      v-if="hasOverflow"
       @click="goToNext"
       class="category-preview-list__go-to-button category-preview-list__go-to-button--right"
       type="button"
@@ -39,6 +47,8 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import MenuItemCard from '../MenuItemCard'
 import useEmblaCarousel from 'embla-carousel-vue'
 import type { ProductRead } from '@/types/api'
@@ -52,10 +62,44 @@ const { menuList, title } = defineProps<{
   menuList: ProductRead[]
 }>()
 
+const router = useRouter()
 const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })
+const hasOverflow = ref(false)
 
 const goToPrev = () => emblaApi.value?.scrollPrev()
 const goToNext = () => emblaApi.value?.scrollNext()
+
+function goToCategory() {
+  router.push({
+    name: 'category',
+    params: {
+      category: title,
+    },
+  })
+}
+
+function syncOverflowState() {
+  hasOverflow.value = Boolean(emblaApi.value?.canScrollPrev() || emblaApi.value?.canScrollNext())
+}
+
+watch(emblaApi, (api, previousApi) => {
+  previousApi?.off('reInit', syncOverflowState)
+  previousApi?.off('select', syncOverflowState)
+
+  if (!api) {
+    hasOverflow.value = false
+    return
+  }
+
+  api.on('reInit', syncOverflowState)
+  api.on('select', syncOverflowState)
+  syncOverflowState()
+})
+
+onBeforeUnmount(() => {
+  emblaApi.value?.off('reInit', syncOverflowState)
+  emblaApi.value?.off('select', syncOverflowState)
+})
 </script>
 
 <style lang="scss">
@@ -70,11 +114,28 @@ const goToNext = () => emblaApi.value?.scrollNext()
   position: relative;
 }
 
+.category-preview-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
 .category-preview-list__title {
   font-size: 26px;
   color: var(--text-primary);
-  margin-bottom: 14px;
   font-weight: 600;
+  text-align: left;
+}
+
+.category-preview-list__link {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .embla {
@@ -149,8 +210,19 @@ const goToNext = () => emblaApi.value?.scrollNext()
     font-size: 22px;
   }
 
+  .category-preview-list__header {
+    margin-bottom: 12px;
+  }
+
   .category-preview-list__go-to-button {
     display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .category-preview-list__header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

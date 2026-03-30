@@ -38,7 +38,7 @@ type SelectOption = {
 const props = withDefaults(
   defineProps<{
     modelValue: SelectValue
-    options: SelectOption[]
+    options: readonly SelectOption[]
     disabled?: boolean
     placeholder?: string
   }>(),

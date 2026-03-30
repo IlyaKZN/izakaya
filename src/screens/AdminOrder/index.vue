@@ -243,6 +243,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  font-family:
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  letter-spacing: -0.01em;
+  font-feature-settings:
+    'cv02' 1,
+    'cv03' 1,
+    'cv04' 1;
 }
 
 .admin-order-screen__state,
@@ -276,6 +286,8 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .admin-order-screen__hero {
@@ -291,18 +303,23 @@ onMounted(() => {
   margin: 0 0 8px;
   color: #d2c5cb;
   font-size: 12px;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .admin-order-screen__title {
   margin: 0 0 8px;
   font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .admin-order-screen__subtitle {
   margin: 0;
   color: #d9cfd3;
+  letter-spacing: 0.01em;
 }
 
 .admin-order-screen__status {
@@ -312,6 +329,9 @@ onMounted(() => {
   padding: 0 12px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -345,6 +365,9 @@ onMounted(() => {
 .admin-order-card__title {
   margin: 0 0 24px;
   font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 
 .admin-order-card__meta {
@@ -368,6 +391,9 @@ onMounted(() => {
 .admin-order-card__meta dt {
   font-size: 12px;
   margin-bottom: 4px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .admin-order-card__note {
@@ -437,11 +463,15 @@ onMounted(() => {
   font-size: 18px;
   line-height: 1.2;
   color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .admin-order-item__meta {
   margin: 0;
   font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 980px) {

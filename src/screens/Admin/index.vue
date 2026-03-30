@@ -249,13 +249,21 @@
             </label>
 
             <label class="admin-field admin-field--grow">
-              <span>Картинка</span>
+              <span>Файл изображения</span>
               <input
-                v-model.trim="productForm.image_url"
-                class="admin-input"
-                placeholder="URL или имя файла"
+                ref="productImageInput"
+                class="admin-input admin-input--file"
+                type="file"
+                accept="image/*"
+                @change="handleProductImageChange"
               />
             </label>
+          </div>
+
+          <p v-if="productImageHint" class="admin-field__hint">{{ productImageHint }}</p>
+
+          <div v-if="productImagePreview" class="admin-product-image-preview">
+            <img :src="productImagePreview" alt="Предпросмотр изображения товара" />
           </div>
 
           <label class="admin-field admin-field--grow">
@@ -361,12 +369,14 @@ const productForm = reactive({
   category_id: '',
   description: '',
   price: '',
-  image_url: '',
   is_active: true,
 })
 
 const variantsText = ref('')
 const ingredientsText = ref('')
+const productImageFile = ref<File | null>(null)
+const productImagePreview = ref('')
+const productImageInput = ref<HTMLInputElement | null>(null)
 
 const orderFilterOptions = [
   { value: '', label: 'Все' },
@@ -404,6 +414,18 @@ const productOptions = computed(() => [
   })),
 ])
 
+const productImageHint = computed(() => {
+  if (productImageFile.value) {
+    return `Будет загружен файл: ${productImageFile.value.name}`
+  }
+
+  if (productMode.value === 'edit' && productImagePreview.value) {
+    return 'Оставьте поле пустым, чтобы не менять текущую картинку.'
+  }
+
+  return ''
+})
+
 const siteStatusLabel = computed(() => {
   const status = siteStatus.value as { is_active?: boolean } | null
 
@@ -439,10 +461,14 @@ function resetProductForm() {
   productForm.category_id = ''
   productForm.description = ''
   productForm.price = ''
-  productForm.image_url = ''
   productForm.is_active = true
   variantsText.value = ''
   ingredientsText.value = ''
+  productImageFile.value = null
+  productImagePreview.value = ''
+  if (productImageInput.value) {
+    productImageInput.value.value = ''
+  }
   productError.value = ''
   productSuccess.value = ''
   if (productMode.value === 'create') {
@@ -467,8 +493,12 @@ function fillProductForm(product: ProductRead) {
   productForm.category_id = product.category_id
   productForm.description = product.description ?? ''
   productForm.price = product.price ?? ''
-  productForm.image_url = product.image_url ?? ''
   productForm.is_active = product.is_active
+  productImageFile.value = null
+  productImagePreview.value = product.image_url ?? ''
+  if (productImageInput.value) {
+    productImageInput.value.value = ''
+  }
   variantsText.value = product.variants
     .map((variant) => `${variant.name}|${variant.quantity_value}|${variant.price}`)
     .join('\n')
@@ -535,11 +565,36 @@ function buildProductPayload() {
     category_id: productForm.category_id,
     description: productForm.description || null,
     price: productForm.price || null,
-    image_url: productForm.image_url || null,
     is_active: productForm.is_active,
     variants: parseVariants(),
     removable_ingredients: parseIngredients(),
   }
+}
+
+function updateProductInList(product: ProductRead) {
+  const productIndex = products.value.findIndex((item) => item.id === product.id)
+
+  if (productIndex >= 0) {
+    products.value[productIndex] = product
+    return
+  }
+
+  products.value.unshift(product)
+}
+
+function handleProductImageChange(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] ?? null
+
+  productImageFile.value = file
+
+  if (!file) {
+    productImagePreview.value =
+      products.value.find((item) => item.id === selectedProductId.value)?.image_url ?? ''
+    return
+  }
+
+  productImagePreview.value = URL.createObjectURL(file)
 }
 
 async function loadOrders() {
@@ -619,27 +674,30 @@ async function submitProduct() {
 
   try {
     const payload = buildProductPayload()
+    const isCreateMode = productMode.value === 'create'
+    let savedProduct: ProductRead
 
-    if (productMode.value === 'create') {
-      const created = await adminStore.createProduct(payload)
-      products.value.unshift(created)
-      productSuccess.value = `Товар «${created.name}» создан`
-      selectedProductId.value = created.id
+    if (isCreateMode) {
+      savedProduct = await adminStore.createProduct(payload)
+      selectedProductId.value = savedProduct.id
       productMode.value = 'edit'
     } else {
       if (!selectedProductId.value) {
         throw new Error('Выберите товар для редактирования')
       }
 
-      const updated = await adminStore.updateProduct(selectedProductId.value, payload)
-      const productIndex = products.value.findIndex((item) => item.id === updated.id)
-
-      if (productIndex >= 0) {
-        products.value[productIndex] = updated
-      }
-
-      productSuccess.value = `Товар «${updated.name}» обновлён`
+      savedProduct = await adminStore.updateProduct(selectedProductId.value, payload)
     }
+
+    if (productImageFile.value) {
+      savedProduct = await adminStore.uploadProductImage(savedProduct.id, productImageFile.value)
+    }
+
+    updateProductInList(savedProduct)
+    fillProductForm(savedProduct)
+    productSuccess.value = isCreateMode
+      ? `Товар «${savedProduct.name}» создан`
+      : `Товар «${savedProduct.name}» обновлён`
   } catch (error) {
     productError.value = error instanceof Error ? error.message : 'Не удалось сохранить товар.'
   } finally {
@@ -701,6 +759,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  font-family:
+    'Segoe UI',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  letter-spacing: -0.01em;
+  font-feature-settings:
+    'cv02' 1,
+    'cv03' 1,
+    'cv04' 1;
 }
 
 .admin-screen__state {
@@ -742,13 +810,17 @@ onMounted(() => {
   margin: 0 0 8px;
   color: var(--text-secondary);
   font-size: 12px;
-  letter-spacing: 0.12em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .admin-card__title {
   margin: 0;
   color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .admin-tabs {
@@ -767,6 +839,8 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .admin-tabs__button--active {
@@ -784,6 +858,8 @@ onMounted(() => {
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .admin-card {
@@ -809,11 +885,15 @@ onMounted(() => {
   font-weight: 700;
   color: #fff;
   margin-bottom: 2px;
+  letter-spacing: -0.03em;
 }
 
 .admin-stat__label {
   color: var(--text-secondary);
   font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .admin-orders-layout {
@@ -863,6 +943,10 @@ onMounted(() => {
   border-radius: 999px;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -884,6 +968,8 @@ onMounted(() => {
   gap: 6px;
   color: var(--text-secondary);
   font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .admin-field--grow {
@@ -899,11 +985,18 @@ onMounted(() => {
   color: #fff;
   padding: 0 12px;
   font: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   outline: none;
 }
 
 .admin-input {
   height: 42px;
+}
+
+.admin-input--file {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .admin-textarea {
@@ -913,12 +1006,36 @@ onMounted(() => {
   resize: vertical;
 }
 
+.admin-field__hint {
+  margin: -6px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.admin-product-image-preview {
+  width: 160px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-product-image-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
 .admin-button {
   min-height: 42px;
   padding: 0 16px;
   border-radius: 12px;
   color: #fff;
   background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .admin-button--ghost {
@@ -957,6 +1074,9 @@ onMounted(() => {
   padding: 0 12px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -1029,12 +1149,14 @@ onMounted(() => {
   font-size: 28px;
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: -0.04em;
   text-align: left;
 }
 
 .admin-order__top p {
   color: var(--text-secondary);
   font-size: 13px;
+  letter-spacing: 0.01em;
 }
 
 .admin-order__meta {
@@ -1053,6 +1175,9 @@ onMounted(() => {
   color: var(--text-secondary);
   font-size: 12px;
   margin-bottom: 4px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .admin-order__status-actions {

@@ -77,7 +77,7 @@ const router = useRouter()
 const cartStore = useCartStore()
 
 const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
-const hasMultipleVariants = computed(() => menuItem.variants.length > 1)
+const hasMultipleVariants = computed(() => menuItem.variants.length)
 const canChangeCount = computed(() => !hasMultipleVariants.value)
 const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
 const productImage = computed(() => getProductImage(menuItem, { thumbnail: true }))

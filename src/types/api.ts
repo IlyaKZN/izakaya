@@ -104,8 +104,9 @@ export type ProductUpdate = {
   description?: string | null
   price?: number | string | null
   category_id?: Uuid | null
-  image_url?: string | null
   is_active?: boolean | null
+  variants?: ProductVariantCreate[] | null
+  removable_ingredients?: ProductRemovableIngredientCreate[] | null
 }
 
 export type ProductRead = {
