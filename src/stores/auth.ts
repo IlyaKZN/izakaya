@@ -7,9 +7,11 @@ import {
   setAuthTokens,
   subscribeToAuthSession,
   updateAccessToken,
+  updateAuthRole,
 } from '@/api/auth-session'
 import type {
   ApiEmptyResponse,
+  AuthRole,
   AuthRequestSMS,
   Token,
   TokenRefreshResponse,
@@ -21,6 +23,7 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref(session.accessToken)
   const refreshTokenValue = ref(session.refreshToken)
   const tokenType = ref(session.tokenType)
+  const role = ref(session.role)
   const loginSmsResult = ref<ApiEmptyResponse | null>(null)
 
   const isAuthenticated = computed(() => Boolean(accessToken.value))
@@ -31,6 +34,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   function clearSession() {
     clearAuthTokens()
+  }
+
+  function setRole(nextRole: AuthRole | null) {
+    updateAuthRole(nextRole)
   }
 
   async function loginSms(payload: AuthRequestSMS) {
@@ -77,12 +84,14 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = nextSession.accessToken
     refreshTokenValue.value = nextSession.refreshToken
     tokenType.value = nextSession.tokenType
+    role.value = nextSession.role
   })
 
   return {
     accessToken,
     refreshToken: refreshTokenValue,
     tokenType,
+    role,
     loginSmsResult,
     isAuthenticated,
     loginSms,
@@ -90,5 +99,6 @@ export const useAuthStore = defineStore('auth', () => {
     refreshAccessToken,
     logout,
     clearSession,
+    setRole,
   }
 })

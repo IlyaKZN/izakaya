@@ -1,4 +1,5 @@
 export type Uuid = string
+export type AuthRole = 'user' | 'admin'
 
 export type ApiEmptyResponse = Record<string, never>
 export type SiteStatusResponse = Record<string, unknown>
@@ -29,6 +30,7 @@ export type Token = {
   access_token: string
   refresh_token: string
   token_type?: string
+  role?: AuthRole
 }
 
 export type TokenRefreshRequest = {
@@ -73,6 +75,7 @@ export type ProductVariantRead = {
   name: string
   quantity_value: number
   price: string
+  is_active: boolean
   created_at: string
 }
 
@@ -194,4 +197,5 @@ export type UserRead = {
   is_active: boolean
   created_at: string
   last_address?: AddressRead | null
+  role?: AuthRole
 }

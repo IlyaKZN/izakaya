@@ -31,11 +31,13 @@
         Пока пусто. Добавьте блюда из каталога.
       </div>
 
-      <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
-        <CartItem :item="cartItem" />
+      <div v-else class="cart__items">
+        <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
+          <CartItem :item="cartItem" />
 
-        <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
-      </template>
+          <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
+        </template>
+      </div>
 
       <div v-if="cartItemList.length" class="cart__phone">
         <input
@@ -340,6 +342,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: calc(100vh - 128px);
 }
 
 .cart__address {
@@ -372,7 +375,19 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 0;
   box-shadow: var(--shadow-card);
+}
+
+.cart__items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+  margin-right: -4px;
 }
 
 .cart__title {
@@ -533,6 +548,26 @@ watch(
   height: 1px;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.cart__items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart__items::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.cart__items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (max-width: 1280px) {
+  .cart-container {
+    max-height: none;
+  }
 }
 
 @media (max-width: 640px) {

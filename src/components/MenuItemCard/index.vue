@@ -1,13 +1,19 @@
 <template>
   <div class="menu-item-card">
     <div @click="goToItem" class="menu-item-card__image-container">
+      <span v-if="hasMultipleVariants && variantsLabel" class="menu-item-card__variants-badge">
+        {{ variantsLabel }}
+      </span>
+
       <img class="menu-item-card__image" :src="productImage" :alt="menuItem.name" loading="lazy" />
     </div>
 
     <div class="menu-item-card__info">
       <span @click="goToItem" class="menu-item-card__name">{{ menuItem.name }}</span>
 
-      <span v-if="weightLabel" class="menu-item-card__weight">{{ weightLabel }}</span>
+      <span v-if="weightLabel" class="menu-item-card__weight">
+        {{ weightLabel }}
+      </span>
       <span v-else class="menu-item-card__description">{{ menuDescription }}</span>
 
       <div class="menu-item-card__bottom-container">
@@ -16,7 +22,7 @@
         <div class="menu-item-card__buttons-container">
           <FadeTransition>
             <button
-              v-if="cartItem"
+              v-if="canChangeCount && cartItem"
               @click="cartStore.removeFromCart(menuItem)"
               class="menu-item-card__button menu-item-card__button--remove"
             >
@@ -25,13 +31,18 @@
           </FadeTransition>
 
           <FadeTransition>
-            <span v-if="cartItem" class="menu-item-card__count">
+            <span v-if="canChangeCount && cartItem" class="menu-item-card__count">
               {{ cartItem.count }}
             </span>
           </FadeTransition>
 
-          <button @click="cartStore.addToCart(menuItem)" class="menu-item-card__button">
-            <span class="material-symbols">add</span>
+          <button
+            @click="handlePrimaryAction"
+            class="menu-item-card__button"
+            :class="{ 'menu-item-card__button--select': hasMultipleVariants }"
+          >
+            <span v-if="hasMultipleVariants" class="menu-item-card__button-label">Выбрать</span>
+            <span v-else class="material-symbols">add</span>
           </button>
         </div>
       </div>
@@ -47,6 +58,8 @@ import { useRouter } from 'vue-router'
 import type { ProductRead } from '@/types/api'
 import {
   formatProductPrice,
+  getProductPrice,
+  getProductVariantsLabel,
   getDefaultProductVariant,
   getProductImage,
   getProductWeight,
@@ -64,13 +77,29 @@ const router = useRouter()
 const cartStore = useCartStore()
 
 const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
+const hasMultipleVariants = computed(() => menuItem.variants.length > 1)
+const canChangeCount = computed(() => !hasMultipleVariants.value)
 const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
 const productImage = computed(() => getProductImage(menuItem, { thumbnail: true }))
-const productPrice = computed(() => formatProductPrice(menuItem, defaultVariant.value))
+const variantsLabel = computed(() => getProductVariantsLabel(menuItem))
+const productPrice = computed(() =>
+  hasMultipleVariants.value
+    ? `от ${getProductPrice(menuItem)} ₽`
+    : formatProductPrice(menuItem, defaultVariant.value),
+)
 const weightLabel = computed(() => getProductWeight(menuItem, defaultVariant.value))
 const menuDescription = computed(
   () => menuItem.description || menuItem.category?.name || 'Без описания',
 )
+
+function handlePrimaryAction() {
+  if (hasMultipleVariants.value) {
+    goToItem()
+    return
+  }
+
+  cartStore.addToCart(menuItem)
+}
 
 function goToItem() {
   router.push({
@@ -118,6 +147,21 @@ function goToItem() {
   cursor: pointer;
   margin-bottom: 12px;
   background: rgba(0, 0, 0, 0.2);
+}
+
+.menu-item-card__variants-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(15, 15, 15, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .menu-item-card__image {
@@ -176,9 +220,12 @@ function goToItem() {
 .menu-item-card__price {
   color: white;
   font-size: 22px;
-  line-height: 1;
+  line-height: 1.05;
   font-weight: 700;
   letter-spacing: 0.2px;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .menu-item-card__button {
@@ -212,6 +259,19 @@ function goToItem() {
   box-shadow: none;
 }
 
+.menu-item-card__button--select {
+  width: auto;
+  min-width: 84px;
+  border-radius: 999px;
+  padding: 0 12px;
+}
+
+.menu-item-card__button-label {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .menu-item-card__bottom-container {
   display: flex;
   align-items: center;
@@ -226,6 +286,7 @@ function goToItem() {
   padding: 4px;
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
 }
 
 .menu-item-card__count {
