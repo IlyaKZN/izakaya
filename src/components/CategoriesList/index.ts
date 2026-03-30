@@ -1,3 +1,3 @@
-import CategoriesList from './index.vue';
+import CategoriesList from './index.vue'
 
-export default CategoriesList;
+export default CategoriesList

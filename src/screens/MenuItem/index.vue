@@ -3,13 +3,9 @@
     <div class="menu-item-screen__content" v-if="item">
       <div class="menu-item-screen__left-column">
         <button class="menu-item-screen__back-link" type="button" @click="goToMain">
-          <span class="material-symbols">
-            arrow_back
-          </span>
+          <span class="material-symbols"> arrow_back </span>
 
-          <span class="menu-item-screen__back-link-text">
-            Вернуться назад
-          </span>
+          <span class="menu-item-screen__back-link-text"> Вернуться назад </span>
         </button>
 
         <img class="menu-item-screen__preview" :src="item.preview" :alt="item.name" />
@@ -32,35 +28,39 @@
           {{ item.name }}
         </span>
 
-        <span class="menu-item-screen__weight">
-          {{ item.weight }} г
-        </span>
+        <span class="menu-item-screen__weight"> {{ item.weight }} г </span>
 
-        <span class="menu-item-screen__price">
-          {{ item.price }} ₽
-        </span>
+        <span class="menu-item-screen__price"> {{ item.price }} ₽ </span>
 
         <div v-if="!cartItem" class="menu-item-screen__add-container">
-          <button @click="cartStore.addToCart(item)" class="menu-item-screen__add-to-cart-button" type="button">
+          <button
+            @click="cartStore.addToCart(item)"
+            class="menu-item-screen__add-to-cart-button"
+            type="button"
+          >
             Добавить в корзину
           </button>
         </div>
 
         <div class="menu-item-screen__change-count-button-container" v-else>
-          <button class="menu-item-screen__change-count-button" type="button" @click="cartStore.removeFromCart(item)">
-            <span class="material-symbols">
-              remove
-            </span>
+          <button
+            class="menu-item-screen__change-count-button"
+            type="button"
+            @click="cartStore.removeFromCart(item)"
+          >
+            <span class="material-symbols"> remove </span>
           </button>
 
           <span class="menu-item-screen__count">
             {{ cartItem.count }}
           </span>
 
-          <button class="menu-item-screen__change-count-button" type="button" @click="cartStore.addToCart(item)">
-            <span class="material-symbols">
-              add
-            </span>
+          <button
+            class="menu-item-screen__change-count-button"
+            type="button"
+            @click="cartStore.addToCart(item)"
+          >
+            <span class="material-symbols"> add </span>
           </button>
         </div>
       </div>
@@ -69,35 +69,35 @@
 </template>
 
 <script setup lang="ts">
-import { menuList } from '@/mocks';
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useCartStore } from '@/stores/cart';
-import { storeToRefs } from 'pinia';
+import { menuList } from '@/mocks'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCartStore } from '@/stores/cart'
+import { storeToRefs } from 'pinia'
 
 defineOptions({
   name: 'MenuItemScreen',
-});
+})
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
-const cartStore = useCartStore();
+const cartStore = useCartStore()
 
-const { cartItems } = storeToRefs(cartStore);
+const { cartItems } = storeToRefs(cartStore)
 
-const itemId = computed(() => Number(route.params.id));
+const itemId = computed(() => Number(route.params.id))
 
 const item = computed(() => {
-  return menuList.find((menuItem) => menuItem.id === itemId.value);
-});
+  return menuList.find((menuItem) => menuItem.id === itemId.value)
+})
 
-const cartItem = computed(() => cartItems.value[itemId.value]);
+const cartItem = computed(() => cartItems.value[itemId.value])
 
 function goToMain() {
   router.push({
     name: 'main',
-  });
+  })
 }
 </script>
 

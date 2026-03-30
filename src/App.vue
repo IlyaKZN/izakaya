@@ -19,9 +19,9 @@
 </template>
 
 <script setup lang="ts">
-import TheHeader from './components/TheHeader';
-import TheCart from './components/Cart';
-import CategoriesList from './components/CategoriesList';
+import TheHeader from './components/TheHeader'
+import TheCart from './components/Cart'
+import CategoriesList from './components/CategoriesList'
 </script>
 
 <style lang="scss">

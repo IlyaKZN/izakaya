@@ -1,3 +1,3 @@
-import CategoryPreviewList from './index.vue';
+import CategoryPreviewList from './index.vue'
 
-export default CategoryPreviewList;
+export default CategoryPreviewList

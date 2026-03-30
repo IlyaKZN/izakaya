@@ -16,15 +16,15 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { useCatalogStore } from '@/stores/catalog';
+import { storeToRefs } from 'pinia'
+import { useCatalogStore } from '@/stores/catalog'
 
 defineOptions({
   name: 'CategoriesList',
-});
+})
 
-const catalogStore = useCatalogStore();
-const { categories, selectedCategory } = storeToRefs(catalogStore);
+const catalogStore = useCatalogStore()
+const { categories, selectedCategory } = storeToRefs(catalogStore)
 </script>
 
 <style lang="scss">
@@ -55,7 +55,9 @@ const { categories, selectedCategory } = storeToRefs(catalogStore);
   text-align: left;
   color: var(--text-primary);
   background: transparent;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
     background: var(--surface-2);

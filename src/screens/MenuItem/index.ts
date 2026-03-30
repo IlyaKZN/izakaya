@@ -1,3 +1,3 @@
-import MenuItemScreen from './index.vue';
+import MenuItemScreen from './index.vue'
 
-export default MenuItemScreen;
+export default MenuItemScreen

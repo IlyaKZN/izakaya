@@ -45,10 +45,7 @@
             </span>
           </FadeTransition>
 
-          <button
-            @click="cartStore.addToCart(menuItem)"
-            class="menu-item-card__button"
-          >
+          <button @click="cartStore.addToCart(menuItem)" class="menu-item-card__button">
             <span class="material-symbols">add</span>
           </button>
         </div>
@@ -58,33 +55,33 @@
 </template>
 
 <script setup lang="ts">
-import type { TMenuItem } from '@/mocks';
-import { useCartStore } from '@/stores/cart';
-import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
-import FadeTransition from '../transitions/Fade';
-import { useRouter } from 'vue-router';
+import type { TMenuItem } from '@/mocks'
+import { useCartStore } from '@/stores/cart'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import FadeTransition from '../transitions/Fade'
+import { useRouter } from 'vue-router'
 
 defineOptions({
   name: 'MenuItemCard',
-});
+})
 
 const { menuItem } = defineProps<{
-  menuItem: TMenuItem;
-}>();
+  menuItem: TMenuItem
+}>()
 
-const router = useRouter();
+const router = useRouter()
 
-const cartStore = useCartStore();
+const cartStore = useCartStore()
 
-const { cartItems } = storeToRefs(cartStore);
+const { cartItems } = storeToRefs(cartStore)
 
-const cartItem = computed(() => cartItems.value[menuItem.id]);
+const cartItem = computed(() => cartItems.value[menuItem.id])
 const badgeTitles = {
   new: 'NEW',
   hit: 'ХИТ',
   spicy: 'ОСТРОЕ',
-};
+}
 
 function goToItem() {
   router.push({
@@ -92,7 +89,7 @@ function goToItem() {
     params: {
       id: menuItem.id,
     },
-  });
+  })
 }
 </script>
 
@@ -107,7 +104,10 @@ function goToItem() {
   background: var(--surface-1);
   border: 1px solid var(--surface-border);
   border-radius: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
@@ -219,7 +219,10 @@ function goToItem() {
   background: linear-gradient(180deg, var(--accent), var(--accent-strong));
   box-shadow: none;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
 
   &:hover {
     transform: translateY(-1px);
@@ -271,4 +274,3 @@ function goToItem() {
   }
 }
 </style>
-

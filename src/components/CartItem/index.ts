@@ -1,3 +1,3 @@
-import CartItem from './index.vue';
+import CartItem from './index.vue'
 
-export default CartItem;
+export default CartItem

@@ -34,29 +34,16 @@
       <template v-for="(cartItem, index) in cartItemList" :key="cartItem.menuItem.id">
         <CartItem :item="cartItem" />
 
-        <div
-          v-if="index !== cartItemList.length - 1"
-          class="cart__separator"
-        />
+        <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
       </template>
 
       <div class="cart__promo" v-if="cartItemList.length">
-        <input
-          v-model.trim="promoCode"
-          class="cart__promo-input"
-          placeholder="Промокод"
-        />
-        <button type="button" class="cart__promo-button" @click="applyPromoCode">
-          Применить
-        </button>
+        <input v-model.trim="promoCode" class="cart__promo-input" placeholder="Промокод" />
+        <button type="button" class="cart__promo-button" @click="applyPromoCode">Применить</button>
       </div>
 
       <label v-if="cartItemList.length" class="cart__bonus-row">
-        <input
-          v-model="useBonuses"
-          type="checkbox"
-          :disabled="maxBonuses === 0"
-        />
+        <input v-model="useBonuses" type="checkbox" :disabled="maxBonuses === 0" />
         <span>Списать бонусы (до {{ maxBonuses }} ₽)</span>
       </label>
 
@@ -87,7 +74,10 @@
         </div>
       </div>
 
-      <div v-if="orderMode === 'delivery' && subtotal > 0 && subtotal < minDeliveryOrder" class="cart__notice">
+      <div
+        v-if="orderMode === 'delivery' && subtotal > 0 && subtotal < minDeliveryOrder"
+        class="cart__notice"
+      >
         Минимальная сумма для доставки: {{ minDeliveryOrder }} ₽
       </div>
 
@@ -101,87 +91,82 @@
       </button>
     </div>
 
-    <AddressPopup
-      v-model="isAddressPopupOpen"
-      @confirm="handleAddressConfirm"
-    />
+    <AddressPopup v-model="isAddressPopupOpen" @confirm="handleAddressConfirm" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useCartStore } from '@/stores/cart';
-import { storeToRefs } from 'pinia';
-import CartItem from '../CartItem';
-import AddressPopup from '../AddressPopup';
+import { computed, ref } from 'vue'
+import { useCartStore } from '@/stores/cart'
+import { storeToRefs } from 'pinia'
+import CartItem from '../CartItem'
+import AddressPopup from '../AddressPopup'
 
 defineOptions({
   name: 'TheCart',
-});
+})
 
-type TOrderMode = 'delivery' | 'pickup';
+type TOrderMode = 'delivery' | 'pickup'
 
 const PROMO_DISCOUNTS: Record<string, number> = {
   PHO10: 10,
   VIET5: 5,
-};
+}
 
-const cartStore = useCartStore();
-const { cartItems } = storeToRefs(cartStore);
+const cartStore = useCartStore()
+const { cartItems } = storeToRefs(cartStore)
 
-const isAddressPopupOpen = ref(false);
-const deliveryAddress = ref('Адрес доставки');
-const orderMode = ref<TOrderMode>('delivery');
-const promoCode = ref('');
-const appliedPromoPercent = ref(0);
-const useBonuses = ref(false);
+const isAddressPopupOpen = ref(false)
+const deliveryAddress = ref('Адрес доставки')
+const orderMode = ref<TOrderMode>('delivery')
+const promoCode = ref('')
+const appliedPromoPercent = ref(0)
+const useBonuses = ref(false)
 
-const minDeliveryOrder = 800;
+const minDeliveryOrder = 800
 
-const cartItemList = computed(() => Object.values(cartItems.value));
+const cartItemList = computed(() => Object.values(cartItems.value))
 
 const subtotal = computed(() =>
   cartItemList.value.reduce((sum, item) => sum + item.menuItem.price * item.count, 0),
-);
+)
 
 const deliveryFee = computed(() => {
-  if (orderMode.value === 'pickup') return 0;
-  if (subtotal.value >= 1500 || subtotal.value === 0) return 0;
+  if (orderMode.value === 'pickup') return 0
+  if (subtotal.value >= 1500 || subtotal.value === 0) return 0
 
-  return 199;
-});
+  return 199
+})
 
-const promoDiscount = computed(() =>
-  Math.floor((subtotal.value * appliedPromoPercent.value) / 100),
-);
+const promoDiscount = computed(() => Math.floor((subtotal.value * appliedPromoPercent.value) / 100))
 
-const maxBonuses = computed(() => Math.min(300, Math.floor(subtotal.value * 0.15)));
+const maxBonuses = computed(() => Math.min(300, Math.floor(subtotal.value * 0.15)))
 
 const bonusesUsed = computed(() => {
-  if (!useBonuses.value) return 0;
+  if (!useBonuses.value) return 0
 
-  const afterPromo = subtotal.value - promoDiscount.value;
-  return Math.min(maxBonuses.value, Math.max(afterPromo, 0));
-});
+  const afterPromo = subtotal.value - promoDiscount.value
+  return Math.min(maxBonuses.value, Math.max(afterPromo, 0))
+})
 
 const totalPrice = computed(() =>
   Math.max(subtotal.value + deliveryFee.value - promoDiscount.value - bonusesUsed.value, 0),
-);
+)
 
 const isCheckoutDisabled = computed(
   () =>
     cartItemList.value.length === 0 ||
     (orderMode.value === 'delivery' && subtotal.value < minDeliveryOrder),
-);
+)
 
 const handleAddressConfirm = (address: string) => {
-  deliveryAddress.value = address;
-};
+  deliveryAddress.value = address
+}
 
 const applyPromoCode = () => {
-  const normalized = promoCode.value.toUpperCase();
-  appliedPromoPercent.value = PROMO_DISCOUNTS[normalized] ?? 0;
-};
+  const normalized = promoCode.value.toUpperCase()
+  appliedPromoPercent.value = PROMO_DISCOUNTS[normalized] ?? 0
+}
 </script>
 
 <style lang="scss">

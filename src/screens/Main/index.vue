@@ -18,18 +18,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { storeToRefs } from 'pinia';
-import CategoryPreviewList from '@/components/CategoryPreviewList';
-import { ALL_CATEGORY, menuCategories } from '@/mocks';
-import { useCatalogStore } from '@/stores/catalog';
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import CategoryPreviewList from '@/components/CategoryPreviewList'
+import { ALL_CATEGORY, menuCategories } from '@/mocks'
+import { useCatalogStore } from '@/stores/catalog'
 
 defineOptions({
   name: 'MainScreen',
-});
+})
 
-const catalogStore = useCatalogStore();
-const { filteredMenuList, selectedCategory } = storeToRefs(catalogStore);
+const catalogStore = useCatalogStore()
+const { filteredMenuList, selectedCategory } = storeToRefs(catalogStore)
 
 const sections = computed(() => {
   if (selectedCategory.value !== ALL_CATEGORY) {
@@ -38,7 +38,7 @@ const sections = computed(() => {
         title: selectedCategory.value,
         items: filteredMenuList.value,
       },
-    ].filter((section) => section.items.length > 0);
+    ].filter((section) => section.items.length > 0)
   }
 
   return menuCategories
@@ -46,8 +46,8 @@ const sections = computed(() => {
       title: category,
       items: filteredMenuList.value.filter((item) => item.category === category),
     }))
-    .filter((section) => section.items.length > 0);
-});
+    .filter((section) => section.items.length > 0)
+})
 </script>
 
 <style lang="scss">

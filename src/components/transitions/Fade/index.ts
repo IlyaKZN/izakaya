@@ -1,3 +1,3 @@
-import FadeTransition from './index.vue';
+import FadeTransition from './index.vue'
 
-export default FadeTransition;
+export default FadeTransition

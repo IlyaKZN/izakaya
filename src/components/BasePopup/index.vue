@@ -1,11 +1,7 @@
 ﻿<template>
   <teleport to="body">
     <transition name="popup-fade">
-      <div
-        v-if="modelValue"
-        class="base-popup"
-        @click="handleOverlayClick"
-      >
+      <div v-if="modelValue" class="base-popup" @click="handleOverlayClick">
         <div
           class="base-popup__content"
           :class="contentClass"
@@ -32,36 +28,36 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    modelValue: boolean;
-    closeOnOverlay?: boolean;
-    showCloseButton?: boolean;
-    contentClass?: string;
+    modelValue: boolean
+    closeOnOverlay?: boolean
+    showCloseButton?: boolean
+    contentClass?: string
   }>(),
   {
     closeOnOverlay: true,
     showCloseButton: true,
   },
-);
+)
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-  (e: 'close'): void;
-}>();
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'close'): void
+}>()
 
 defineOptions({
   name: 'BasePopup',
-});
+})
 
 const close = () => {
-  emit('update:modelValue', false);
-  emit('close');
-};
+  emit('update:modelValue', false)
+  emit('close')
+}
 
 const handleOverlayClick = () => {
   if (props.closeOnOverlay) {
-    close();
+    close()
   }
-};
+}
 </script>
 
 <style lang="scss">
@@ -111,4 +107,3 @@ const handleOverlayClick = () => {
   opacity: 0;
 }
 </style>
-

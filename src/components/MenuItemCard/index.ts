@@ -1,3 +1,3 @@
-import MenuItemCard from './index.vue';
+import MenuItemCard from './index.vue'
 
-export default MenuItemCard;
+export default MenuItemCard

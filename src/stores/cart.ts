@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { type TMenuItem } from '@/mocks'
 
@@ -8,11 +8,11 @@ export type TCartItem = {
 }
 
 export const useCartStore = defineStore('cart', () => {
-  const cartItems = ref<Record<number, TCartItem>>({});
+  const cartItems = ref<Record<number, TCartItem>>({})
 
   function addToCart(item: TMenuItem) {
     if (cartItems.value[item.id]) {
-      cartItems.value[item.id]!.count = cartItems.value[item.id]!.count + 1;
+      cartItems.value[item.id]!.count = cartItems.value[item.id]!.count + 1
     } else {
       cartItems.value[item.id] = {
         menuItem: item,
@@ -22,19 +22,19 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function removeFromCart(item: TMenuItem) {
-    const cartItem = cartItems.value[item.id];
+    const cartItem = cartItems.value[item.id]
 
-    if (!cartItem) return;
+    if (!cartItem) return
 
-    cartItem.count -= 1;
-    
+    cartItem.count -= 1
+
     if (cartItem.count === 0) {
-      delete cartItems.value[item.id];
+      delete cartItems.value[item.id]
     }
   }
 
   function clear() {
-    cartItems.value = {};
+    cartItems.value = {}
   }
 
   return {

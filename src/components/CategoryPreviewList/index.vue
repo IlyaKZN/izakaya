@@ -18,11 +18,7 @@
     <div class="embla">
       <div class="embla__viewport" ref="emblaRef">
         <div class="embla__container">
-          <div
-            v-for="item in menuList"
-            :key="item.id"
-            class="embla__slide"
-          >
+          <div v-for="item in menuList" :key="item.id" class="embla__slide">
             <MenuItemCard :menu-item="item" />
           </div>
         </div>
@@ -43,23 +39,23 @@
 </template>
 
 <script setup lang="ts">
-import { type TMenuItem } from '@/mocks';
-import MenuItemCard from '../MenuItemCard';
-import useEmblaCarousel from 'embla-carousel-vue';
+import { type TMenuItem } from '@/mocks'
+import MenuItemCard from '../MenuItemCard'
+import useEmblaCarousel from 'embla-carousel-vue'
 
 defineOptions({
   name: 'CategoryPreviewList',
-});
+})
 
 const { menuList, title } = defineProps<{
-  title: string;
-  menuList: TMenuItem[];
-}>();
+  title: string
+  menuList: TMenuItem[]
+}>()
 
-const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true });
+const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })
 
-const goToPrev = () => emblaApi.value?.scrollPrev();
-const goToNext = () => emblaApi.value?.scrollNext();
+const goToPrev = () => emblaApi.value?.scrollPrev()
+const goToNext = () => emblaApi.value?.scrollNext()
 </script>
 
 <style lang="scss">
@@ -116,7 +112,9 @@ const goToNext = () => emblaApi.value?.scrollNext();
   justify-content: center;
   background: rgba(18, 24, 21, 0.92);
   border: 1px solid var(--surface-border);
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .category-preview-list__go-to-button:hover {

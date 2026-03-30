@@ -1,3 +1,3 @@
-import TheCart from './index.vue';
+import TheCart from './index.vue'
 
-export default TheCart;
+export default TheCart

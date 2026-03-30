@@ -1,3 +1,3 @@
-import BasePopup from './index.vue';
+import BasePopup from './index.vue'
 
-export default BasePopup;
+export default BasePopup

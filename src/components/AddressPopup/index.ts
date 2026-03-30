@@ -1,3 +1,3 @@
-﻿import AddressPopup from './index.vue';
+import AddressPopup from './index.vue'
 
-export default AddressPopup;
+export default AddressPopup

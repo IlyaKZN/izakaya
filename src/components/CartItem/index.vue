@@ -13,10 +13,12 @@
       </span>
 
       <div class="cart-item__count-container">
-        <button class="cart-item__button" type="button" @click="cartStore.removeFromCart(item.menuItem)">
-          <span class="material-symbols">
-            remove
-          </span>
+        <button
+          class="cart-item__button"
+          type="button"
+          @click="cartStore.removeFromCart(item.menuItem)"
+        >
+          <span class="material-symbols"> remove </span>
         </button>
 
         <span class="cart-item__count">
@@ -24,32 +26,28 @@
         </span>
 
         <button class="cart-item__button" type="button" @click="cartStore.addToCart(item.menuItem)">
-          <span class="material-symbols">
-            add
-          </span>
+          <span class="material-symbols"> add </span>
         </button>
       </div>
 
-      <span class="cart-item__price">
-        {{ item.menuItem.price * item.count }} ₽
-      </span>
+      <span class="cart-item__price"> {{ item.menuItem.price * item.count }} ₽ </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { type TCartItem } from '@/stores/cart';
-import { useCartStore } from '@/stores/cart';
+import { type TCartItem } from '@/stores/cart'
+import { useCartStore } from '@/stores/cart'
 
 defineOptions({
   name: 'CartItem',
-});
+})
 
 const { item } = defineProps<{
-  item: TCartItem;
-}>();
+  item: TCartItem
+}>()
 
-const cartStore = useCartStore();
+const cartStore = useCartStore()
 </script>
 
 <style lang="scss">

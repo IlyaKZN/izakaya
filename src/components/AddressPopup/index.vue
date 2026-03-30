@@ -46,10 +46,30 @@
           </button>
 
           <div class="address-popup__grid">
-            <input v-model="form.block" class="address-popup__input" type="text" placeholder="Корпус" />
-            <input v-model="form.entrance" class="address-popup__input" type="text" placeholder="Подъезд" />
-            <input v-model="form.intercom" class="address-popup__input" type="text" placeholder="Домофон" />
-            <input v-model="form.floor" class="address-popup__input" type="text" placeholder="Этаж" />
+            <input
+              v-model="form.block"
+              class="address-popup__input"
+              type="text"
+              placeholder="Корпус"
+            />
+            <input
+              v-model="form.entrance"
+              class="address-popup__input"
+              type="text"
+              placeholder="Подъезд"
+            />
+            <input
+              v-model="form.intercom"
+              class="address-popup__input"
+              type="text"
+              placeholder="Домофон"
+            />
+            <input
+              v-model="form.floor"
+              class="address-popup__input"
+              type="text"
+              placeholder="Этаж"
+            />
           </div>
 
           <label class="address-popup__field">
@@ -113,23 +133,23 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
-import BasePopup from '@/components/BasePopup';
+import { reactive, ref } from 'vue'
+import BasePopup from '@/components/BasePopup'
 
 defineOptions({
   name: 'AddressPopup',
-});
+})
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
+defineProps<{
+  modelValue: boolean
+}>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-  (e: 'confirm', value: string): void;
-}>();
+  (e: 'update:modelValue', value: boolean): void
+  (e: 'confirm', value: string): void
+}>()
 
-const activeTab = ref<'delivery' | 'pickup'>('delivery');
+const activeTab = ref<'delivery' | 'pickup'>('delivery')
 
 const form = reactive({
   street: 'Кремлевская улица, 27',
@@ -141,12 +161,12 @@ const form = reactive({
   privateHouse: false,
   note: '',
   saveAddress: false,
-});
+})
 
 const confirmAddress = () => {
-  emit('confirm', form.street);
-  emit('update:modelValue', false);
-};
+  emit('confirm', form.street)
+  emit('update:modelValue', false)
+}
 </script>
 
 <style lang="scss">
@@ -360,8 +380,7 @@ const confirmAddress = () => {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    #18161b;
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), #18161b;
   background-size: 44px 44px;
   position: relative;
   overflow: hidden;

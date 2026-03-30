@@ -1,3 +1,3 @@
-import MainScreen from './index.vue';
+import MainScreen from './index.vue'
 
-export default MainScreen;
+export default MainScreen

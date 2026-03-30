@@ -8,11 +8,7 @@
 
       <label class="header__search">
         <span class="material-symbols">search</span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Поиск по меню"
-        />
+        <input v-model="searchQuery" type="text" placeholder="Поиск по меню" />
       </label>
 
       <div class="header__meta">
@@ -30,15 +26,15 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { useCatalogStore } from '@/stores/catalog';
+import { storeToRefs } from 'pinia'
+import { useCatalogStore } from '@/stores/catalog'
 
 defineOptions({
   name: 'TheHeader',
-});
+})
 
-const catalogStore = useCatalogStore();
-const { searchQuery } = storeToRefs(catalogStore);
+const catalogStore = useCatalogStore()
+const { searchQuery } = storeToRefs(catalogStore)
 </script>
 
 <style lang="scss">
