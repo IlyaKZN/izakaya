@@ -1,11 +1,6 @@
-﻿<template>
+<template>
   <div class="cart-item">
-    <img
-      class="cart-item__image"
-      :src="item.menuItem.preview"
-      :alt="item.menuItem.name"
-      loading="lazy"
-    />
+    <img class="cart-item__image" :src="productImage" :alt="item.menuItem.name" loading="lazy" />
 
     <div class="cart-item__info">
       <span class="cart-item__name">
@@ -30,14 +25,16 @@
         </button>
       </div>
 
-      <span class="cart-item__price"> {{ item.menuItem.price * item.count }} ₽ </span>
+      <span class="cart-item__price"> {{ totalPrice }} ₽ </span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { type TCartItem } from '@/stores/cart'
 import { useCartStore } from '@/stores/cart'
+import { getProductImage, getProductPrice } from '@/utils/products'
 
 defineOptions({
   name: 'CartItem',
@@ -48,6 +45,8 @@ const { item } = defineProps<{
 }>()
 
 const cartStore = useCartStore()
+const productImage = computed(() => getProductImage(item.menuItem))
+const totalPrice = computed(() => getProductPrice(item.menuItem) * item.count)
 </script>
 
 <style lang="scss">

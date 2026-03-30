@@ -1,6 +1,16 @@
-﻿<template>
+<template>
   <div class="main-screen">
-    <template v-if="sections.length">
+    <div v-if="isLoading" class="main-screen__empty">
+      <span class="material-symbols">progress_activity</span>
+      <span>Загружаем меню</span>
+    </div>
+
+    <div v-else-if="errorMessage" class="main-screen__empty">
+      <span class="material-symbols">wifi_off</span>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <template v-else-if="sections.length">
       <CategoryPreviewList
         v-for="section in sections"
         :key="section.title"
@@ -18,18 +28,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import CategoryPreviewList from '@/components/CategoryPreviewList'
-import { ALL_CATEGORY, menuCategories } from '@/mocks'
-import { useCatalogStore } from '@/stores/catalog'
+import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
 
 defineOptions({
   name: 'MainScreen',
 })
 
 const catalogStore = useCatalogStore()
-const { filteredMenuList, selectedCategory } = storeToRefs(catalogStore)
+const { filteredMenuList, selectedCategory, categories, isLoading, errorMessage } =
+  storeToRefs(catalogStore)
+
+onMounted(() => {
+  void catalogStore.loadCatalog().catch(() => undefined)
+})
 
 const sections = computed(() => {
   if (selectedCategory.value !== ALL_CATEGORY) {
@@ -41,10 +55,11 @@ const sections = computed(() => {
     ].filter((section) => section.items.length > 0)
   }
 
-  return menuCategories
+  return categories.value
+    .filter((category) => category !== ALL_CATEGORY)
     .map((category) => ({
       title: category,
-      items: filteredMenuList.value.filter((item) => item.category === category),
+      items: filteredMenuList.value.filter((item) => item.category?.name === category),
     }))
     .filter((section) => section.items.length > 0)
 })

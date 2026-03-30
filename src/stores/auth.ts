@@ -3,10 +3,9 @@ import { defineStore } from 'pinia'
 import * as authApi from '@/api/auth'
 import {
   clearAuthTokens,
-  getAccessToken,
-  getRefreshToken,
-  getTokenType,
+  readAuthSession,
   setAuthTokens,
+  subscribeToAuthSession,
   updateAccessToken,
 } from '@/api/auth-session'
 import type {
@@ -18,25 +17,20 @@ import type {
 } from '@/types/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref(getAccessToken())
-  const refreshTokenValue = ref(getRefreshToken())
-  const tokenType = ref(getTokenType())
+  const session = readAuthSession()
+  const accessToken = ref(session.accessToken)
+  const refreshTokenValue = ref(session.refreshToken)
+  const tokenType = ref(session.tokenType)
   const loginSmsResult = ref<ApiEmptyResponse | null>(null)
 
   const isAuthenticated = computed(() => Boolean(accessToken.value))
 
   function syncTokens(tokens: Token) {
     setAuthTokens(tokens)
-    accessToken.value = tokens.access_token
-    refreshTokenValue.value = tokens.refresh_token
-    tokenType.value = tokens.token_type ?? 'bearer'
   }
 
   function clearSession() {
     clearAuthTokens()
-    accessToken.value = null
-    refreshTokenValue.value = null
-    tokenType.value = 'bearer'
   }
 
   async function loginSms(payload: AuthRequestSMS) {
@@ -63,8 +57,6 @@ export const useAuthStore = defineStore('auth', () => {
     })
 
     updateAccessToken(response.access_token, response.token_type ?? 'bearer')
-    accessToken.value = response.access_token
-    tokenType.value = response.token_type ?? 'bearer'
 
     return response
   }
@@ -80,6 +72,12 @@ export const useAuthStore = defineStore('auth', () => {
       throw error
     }
   }
+
+  subscribeToAuthSession((nextSession) => {
+    accessToken.value = nextSession.accessToken
+    refreshTokenValue.value = nextSession.refreshToken
+    tokenType.value = nextSession.tokenType
+  })
 
   return {
     accessToken,

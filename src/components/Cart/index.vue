@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="cart-container">
     <button type="button" class="cart__address" @click="isAddressPopupOpen = true">
       <span class="material-symbols">location_on</span>
@@ -37,7 +37,7 @@
         <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
       </template>
 
-      <div class="cart__promo" v-if="cartItemList.length">
+      <div v-if="cartItemList.length" class="cart__promo">
         <input v-model.trim="promoCode" class="cart__promo-input" placeholder="Промокод" />
         <button type="button" class="cart__promo-button" @click="applyPromoCode">Применить</button>
       </div>
@@ -58,12 +58,12 @@
           <span>{{ deliveryFee }} ₽</span>
         </div>
 
-        <div class="cart__summary-row" v-if="promoDiscount > 0">
+        <div v-if="promoDiscount > 0" class="cart__summary-row">
           <span>Скидка по промокоду</span>
           <span>-{{ promoDiscount }} ₽</span>
         </div>
 
-        <div class="cart__summary-row" v-if="bonusesUsed > 0">
+        <div v-if="bonusesUsed > 0" class="cart__summary-row">
           <span>Бонусы</span>
           <span>-{{ bonusesUsed }} ₽</span>
         </div>
@@ -101,6 +101,7 @@ import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
 import CartItem from '../CartItem'
 import AddressPopup from '../AddressPopup'
+import { getProductPrice } from '@/utils/products'
 
 defineOptions({
   name: 'TheCart',
@@ -124,11 +125,10 @@ const appliedPromoPercent = ref(0)
 const useBonuses = ref(false)
 
 const minDeliveryOrder = 800
-
 const cartItemList = computed(() => Object.values(cartItems.value))
 
 const subtotal = computed(() =>
-  cartItemList.value.reduce((sum, item) => sum + item.menuItem.price * item.count, 0),
+  cartItemList.value.reduce((sum, item) => sum + getProductPrice(item.menuItem) * item.count, 0),
 )
 
 const deliveryFee = computed(() => {
@@ -139,7 +139,6 @@ const deliveryFee = computed(() => {
 })
 
 const promoDiscount = computed(() => Math.floor((subtotal.value * appliedPromoPercent.value) / 100))
-
 const maxBonuses = computed(() => Math.min(300, Math.floor(subtotal.value * 0.15)))
 
 const bonusesUsed = computed(() => {

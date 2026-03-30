@@ -1,6 +1,16 @@
-﻿<template>
+<template>
   <div class="menu-item-screen">
-    <div class="menu-item-screen__content" v-if="item">
+    <div v-if="isLoading" class="menu-item-screen__state">
+      <span class="material-symbols">progress_activity</span>
+      <span>Загружаем блюдо</span>
+    </div>
+
+    <div v-else-if="!item" class="menu-item-screen__state">
+      <span class="material-symbols">search_off</span>
+      <span>Блюдо не найдено</span>
+    </div>
+
+    <div v-else class="menu-item-screen__content">
       <div class="menu-item-screen__left-column">
         <button class="menu-item-screen__back-link" type="button" @click="goToMain">
           <span class="material-symbols"> arrow_back </span>
@@ -8,15 +18,15 @@
           <span class="menu-item-screen__back-link-text"> Вернуться назад </span>
         </button>
 
-        <img class="menu-item-screen__preview" :src="item.preview" :alt="item.name" />
+        <img class="menu-item-screen__preview" :src="productImage" :alt="item.name" />
 
-        <div class="menu-item-screen__ingredients">
-          <template v-for="(ingredient, index) in item.ingredients" :key="index">
+        <div v-if="ingredients.length" class="menu-item-screen__ingredients">
+          <template v-for="(ingredient, index) in ingredients" :key="ingredient">
             <span class="menu-item-screen__ingredient">
               {{ ingredient }}
             </span>
 
-            <span v-if="index !== item.ingredients.length - 1" class="menu-item-screen__separator">
+            <span v-if="index !== ingredients.length - 1" class="menu-item-screen__separator">
               •
             </span>
           </template>
@@ -28,9 +38,17 @@
           {{ item.name }}
         </span>
 
-        <span class="menu-item-screen__weight"> {{ item.weight }} г </span>
+        <span v-if="weightLabel" class="menu-item-screen__weight"> {{ weightLabel }} </span>
 
-        <span class="menu-item-screen__price"> {{ item.price }} ₽ </span>
+        <p v-if="item.description" class="menu-item-screen__description">
+          {{ item.description }}
+        </p>
+
+        <span class="menu-item-screen__price"> {{ productPrice }} </span>
+
+        <span v-if="variantsLabel" class="menu-item-screen__variants">
+          {{ variantsLabel }}
+        </span>
 
         <div v-if="!cartItem" class="menu-item-screen__add-container">
           <button
@@ -42,7 +60,7 @@
           </button>
         </div>
 
-        <div class="menu-item-screen__change-count-button-container" v-else>
+        <div v-else class="menu-item-screen__change-count-button-container">
           <button
             class="menu-item-screen__change-count-button"
             type="button"
@@ -69,11 +87,18 @@
 </template>
 
 <script setup lang="ts">
-import { menuList } from '@/mocks'
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
+import { useProductsStore } from '@/stores/products'
+import {
+  formatProductPrice,
+  getProductImage,
+  getProductIngredients,
+  getProductVariantsLabel,
+  getProductWeight,
+} from '@/utils/products'
 
 defineOptions({
   name: 'MenuItemScreen',
@@ -81,18 +106,40 @@ defineOptions({
 
 const router = useRouter()
 const route = useRoute()
-
 const cartStore = useCartStore()
-
+const productsStore = useProductsStore()
 const { cartItems } = storeToRefs(cartStore)
 
-const itemId = computed(() => Number(route.params.id))
+const isLoading = ref(false)
+const itemId = computed(() => String(route.params.id))
 
-const item = computed(() => {
-  return menuList.find((menuItem) => menuItem.id === itemId.value)
+const item = computed(() => productsStore.productsById[itemId.value])
+const cartItem = computed(() => cartItems.value[itemId.value])
+const productImage = computed(() => (item.value ? getProductImage(item.value) : ''))
+const ingredients = computed(() => (item.value ? getProductIngredients(item.value) : []))
+const productPrice = computed(() => (item.value ? formatProductPrice(item.value) : ''))
+const weightLabel = computed(() => (item.value ? getProductWeight(item.value) : null))
+const variantsLabel = computed(() => (item.value ? getProductVariantsLabel(item.value) : null))
+
+async function loadProduct() {
+  if (!itemId.value || item.value) return
+
+  isLoading.value = true
+
+  try {
+    await productsStore.fetchProduct(itemId.value)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  void loadProduct().catch(() => undefined)
 })
 
-const cartItem = computed(() => cartItems.value[itemId.value])
+watch(itemId, () => {
+  void loadProduct().catch(() => undefined)
+})
 
 function goToMain() {
   router.push({
@@ -104,6 +151,19 @@ function goToMain() {
 <style lang="scss">
 .menu-item-screen {
   width: 100%;
+}
+
+.menu-item-screen__state {
+  min-height: 260px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .menu-item-screen__preview {
@@ -165,6 +225,13 @@ function goToMain() {
   margin-bottom: 20px;
 }
 
+.menu-item-screen__description {
+  margin: 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
 .menu-item-screen__ingredients {
   display: flex;
   align-items: center;
@@ -181,6 +248,11 @@ function goToMain() {
   margin-bottom: 20px;
   font-size: 34px;
   font-weight: 700;
+}
+
+.menu-item-screen__variants {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
 }
 
 .menu-item-screen__add-container {

@@ -1,4 +1,11 @@
-import { getAccessToken, getTokenType } from '@/api/auth-session'
+import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  getTokenType,
+  updateAccessToken,
+} from '@/api/auth-session'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
@@ -20,63 +27,118 @@ type QueryParams = Record<string, QueryValue>
 
 type RequestOptions = {
   body?: unknown
-  headers?: HeadersInit
+  headers?: Record<string, string>
   query?: QueryParams
 }
 
-function buildUrl(path: string, query?: QueryParams) {
-  const url = new URL(path, API_BASE_URL || window.location.origin)
-
-  if (query) {
-    Object.entries(query).forEach(([key, value]) => {
-      if (value === null || value === undefined) return
-
-      url.searchParams.set(key, String(value))
-    })
-  }
-
-  return API_BASE_URL ? url.toString() : `${url.pathname}${url.search}`
+type RetryableAxiosRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean
 }
 
-async function parseResponse(response: Response) {
-  const contentType = response.headers.get('content-type') ?? ''
+const http = axios.create({
+  baseURL: API_BASE_URL || undefined,
+})
 
-  if (contentType.includes('application/json')) {
-    return response.json()
+const authHttp = axios.create({
+  baseURL: API_BASE_URL || undefined,
+})
+
+let refreshRequest: Promise<string> | null = null
+
+http.interceptors.request.use((config) => {
+  const accessToken = getAccessToken()
+
+  if (accessToken) {
+    config.headers.set('Authorization', `${getTokenType()} ${accessToken}`)
   }
 
-  if (contentType.startsWith('text/')) {
-    return response.text()
+  return config
+})
+
+async function refreshAccessToken() {
+  const refreshToken = getRefreshToken()
+
+  if (!refreshToken) {
+    throw new Error('Refresh token is missing')
   }
 
-  return null
+  const response = await authHttp.post<{ access_token: string; token_type?: string }>(
+    '/api/v1/auth/refresh',
+    {
+      refresh_token: refreshToken,
+    },
+  )
+
+  const nextAccessToken = response.data.access_token
+  const nextTokenType = response.data.token_type ?? 'bearer'
+
+  updateAccessToken(nextAccessToken, nextTokenType)
+
+  return nextAccessToken
+}
+
+http.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableAxiosRequestConfig | undefined
+
+    if (
+      error.response?.status !== 401 ||
+      !originalRequest ||
+      originalRequest._retry ||
+      originalRequest.url === '/api/v1/auth/refresh'
+    ) {
+      return Promise.reject(error)
+    }
+
+    originalRequest._retry = true
+
+    try {
+      refreshRequest ??= refreshAccessToken().finally(() => {
+        refreshRequest = null
+      })
+
+      const nextAccessToken = await refreshRequest
+      originalRequest.headers.set('Authorization', `${getTokenType()} ${nextAccessToken}`)
+
+      return http.request(originalRequest)
+    } catch (refreshError) {
+      clearAuthTokens()
+      return Promise.reject(refreshError)
+    }
+  },
+)
+
+function sanitizeQuery(query?: QueryParams) {
+  if (!query) return undefined
+
+  return Object.fromEntries(
+    Object.entries(query).filter(([, value]) => value !== null && value !== undefined),
+  )
 }
 
 async function request<T>(method: string, path: string, options: RequestOptions = {}) {
-  const accessToken = getAccessToken()
-  const headers = new Headers(options.headers)
+  try {
+    const response = await http.request<T>({
+      url: path,
+      method: method as AxiosRequestConfig['method'],
+      data: options.body,
+      params: sanitizeQuery(options.query),
+      headers: options.headers,
+    })
 
-  if (options.body !== undefined) {
-    headers.set('Content-Type', 'application/json')
+    return response.data
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      throw new ApiError(
+        error.response?.statusText || error.message || 'Request failed',
+        error.response?.status ?? 0,
+        error.response?.data ?? null,
+      )
+    }
+
+    throw error
   }
-
-  if (accessToken) {
-    headers.set('Authorization', `${getTokenType()} ${accessToken}`)
-  }
-
-  const response = await fetch(buildUrl(path, options.query), {
-    method,
-    headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  })
-
-  const data = await parseResponse(response)
-
-  if (!response.ok) {
-    throw new ApiError(response.statusText || 'Request failed', response.status, data)
-  }
-
-  return data as T
 }
 
 export function getRequest<T>(path: string, query?: QueryParams) {

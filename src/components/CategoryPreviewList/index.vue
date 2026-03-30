@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="category-preview-list">
     <span class="category-preview-list__title">
       {{ title }}
@@ -39,9 +39,9 @@
 </template>
 
 <script setup lang="ts">
-import { type TMenuItem } from '@/mocks'
 import MenuItemCard from '../MenuItemCard'
 import useEmblaCarousel from 'embla-carousel-vue'
+import type { ProductRead } from '@/types/api'
 
 defineOptions({
   name: 'CategoryPreviewList',
@@ -49,7 +49,7 @@ defineOptions({
 
 const { menuList, title } = defineProps<{
   title: string
-  menuList: TMenuItem[]
+  menuList: ProductRead[]
 }>()
 
 const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })

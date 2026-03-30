@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCatalogStore } from '@/stores/catalog'
 
@@ -25,6 +26,10 @@ defineOptions({
 
 const catalogStore = useCatalogStore()
 const { categories, selectedCategory } = storeToRefs(catalogStore)
+
+onMounted(() => {
+  void catalogStore.loadCatalog().catch(() => undefined)
+})
 </script>
 
 <style lang="scss">

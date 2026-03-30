@@ -1,32 +1,17 @@
-﻿<template>
+<template>
   <div class="menu-item-card">
     <div @click="goToItem" class="menu-item-card__image-container">
-      <div v-if="menuItem.badges?.length" class="menu-item-card__badges">
-        <span
-          v-for="badge in menuItem.badges"
-          :key="badge"
-          class="menu-item-card__badge"
-          :class="`menu-item-card__badge--${badge}`"
-        >
-          {{ badgeTitles[badge] }}
-        </span>
-      </div>
-
-      <img
-        class="menu-item-card__image"
-        :src="menuItem.preview"
-        :alt="menuItem.name"
-        loading="lazy"
-      />
+      <img class="menu-item-card__image" :src="productImage" :alt="menuItem.name" loading="lazy" />
     </div>
 
     <div class="menu-item-card__info">
       <span @click="goToItem" class="menu-item-card__name">{{ menuItem.name }}</span>
 
-      <span class="menu-item-card__weight">{{ menuItem.weight }} г</span>
+      <span v-if="weightLabel" class="menu-item-card__weight">{{ weightLabel }}</span>
+      <span v-else class="menu-item-card__description">{{ menuDescription }}</span>
 
       <div class="menu-item-card__bottom-container">
-        <span class="menu-item-card__price">{{ menuItem.price }} ₽</span>
+        <span class="menu-item-card__price">{{ productPrice }}</span>
 
         <div class="menu-item-card__buttons-container">
           <FadeTransition>
@@ -55,33 +40,33 @@
 </template>
 
 <script setup lang="ts">
-import type { TMenuItem } from '@/mocks'
+import { computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
 import FadeTransition from '../transitions/Fade'
 import { useRouter } from 'vue-router'
+import type { ProductRead } from '@/types/api'
+import { formatProductPrice, getProductImage, getProductWeight } from '@/utils/products'
 
 defineOptions({
   name: 'MenuItemCard',
 })
 
 const { menuItem } = defineProps<{
-  menuItem: TMenuItem
+  menuItem: ProductRead
 }>()
 
 const router = useRouter()
-
 const cartStore = useCartStore()
-
 const { cartItems } = storeToRefs(cartStore)
 
 const cartItem = computed(() => cartItems.value[menuItem.id])
-const badgeTitles = {
-  new: 'NEW',
-  hit: 'ХИТ',
-  spicy: 'ОСТРОЕ',
-}
+const productImage = computed(() => getProductImage(menuItem))
+const productPrice = computed(() => formatProductPrice(menuItem))
+const weightLabel = computed(() => getProductWeight(menuItem))
+const menuDescription = computed(
+  () => menuItem.description || menuItem.category?.name || 'Без описания',
+)
 
 function goToItem() {
   router.push({
@@ -131,37 +116,6 @@ function goToItem() {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.menu-item-card__badges {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 1;
-  display: flex;
-  gap: 6px;
-}
-
-.menu-item-card__badge {
-  height: 22px;
-  border-radius: 999px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.menu-item-card__badge--new {
-  background: rgba(59, 109, 176, 0.9);
-}
-
-.menu-item-card__badge--hit {
-  background: rgba(127, 46, 67, 0.9);
-}
-
-.menu-item-card__badge--spicy {
-  background: rgba(176, 88, 51, 0.9);
-}
-
 .menu-item-card__image {
   width: 100%;
   height: 100%;
@@ -202,6 +156,17 @@ function goToItem() {
   color: rgba(255, 255, 255, 0.85);
   background: rgba(255, 255, 255, 0.12);
   margin-bottom: 10px;
+}
+
+.menu-item-card__description {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .menu-item-card__price {
