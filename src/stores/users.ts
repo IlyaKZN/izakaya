@@ -21,10 +21,16 @@ export const useUsersStore = defineStore('users', () => {
     return response
   }
 
+  function clearProfile() {
+    profile.value = null
+    myOrders.value = []
+  }
+
   return {
     profile,
     myOrders,
     fetchProfile,
     fetchMyOrders,
+    clearProfile,
   }
 })

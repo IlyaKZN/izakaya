@@ -19,9 +19,39 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import TheHeader from './components/TheHeader'
 import TheCart from './components/Cart'
 import CategoriesList from './components/CategoriesList'
+import { useAuthStore } from './stores/auth'
+import { useUsersStore } from './stores/users'
+
+const authStore = useAuthStore()
+const usersStore = useUsersStore()
+const { isAuthenticated } = storeToRefs(authStore)
+
+const syncProfile = async () => {
+  if (!isAuthenticated.value) {
+    usersStore.clearProfile()
+    return
+  }
+
+  try {
+    await usersStore.fetchProfile()
+  } catch {
+    authStore.clearSession()
+    usersStore.clearProfile()
+  }
+}
+
+onMounted(() => {
+  void syncProfile()
+})
+
+watch(isAuthenticated, () => {
+  void syncProfile()
+})
 </script>
 
 <style lang="scss">
