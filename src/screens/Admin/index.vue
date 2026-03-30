@@ -90,7 +90,13 @@
               <article v-for="order in sortedOrders" :key="order.id" class="admin-order">
                 <div class="admin-order__top">
                   <div>
-                    <h3>Заказ {{ shortOrderId(order.id) }}</h3>
+                    <button
+                      type="button"
+                      class="admin-order__link"
+                      @click="openOrder(order.id)"
+                    >
+                      Заказ {{ shortOrderId(order.id) }}
+                    </button>
                     <p>{{ formatDate(order.created_at) }}</p>
                   </div>
 
@@ -309,6 +315,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import BaseSelect from '@/components/BaseSelect'
 import { useAdminStore } from '@/stores/admin'
@@ -325,6 +332,7 @@ type AdminTab = 'orders' | 'products'
 type ProductMode = 'create' | 'edit'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const adminStore = useAdminStore()
 const productsStore = useProductsStore()
 const siteStore = useSiteStore()
@@ -676,6 +684,13 @@ function paymentLabel(paymentMethod: string) {
   )
 }
 
+function openOrder(orderId: string) {
+  router.push({
+    name: 'admin-order',
+    params: { id: orderId },
+  })
+}
+
 onMounted(() => {
   void loadAdminData()
 })
@@ -1008,8 +1023,13 @@ onMounted(() => {
   margin: 0;
 }
 
-.admin-order__top h3 {
+.admin-order__link {
   margin-bottom: 4px;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: left;
 }
 
 .admin-order__top p {

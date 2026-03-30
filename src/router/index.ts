@@ -5,6 +5,7 @@ const MainScreen = () => import('@/screens/Main')
 const MenuItemScreen = () => import('@/screens/MenuItem')
 const ProfileScreen = () => import('@/screens/Profile')
 const AdminScreen = () => import('@/screens/Admin')
+const AdminOrderScreen = () => import('@/screens/AdminOrder')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,6 +55,17 @@ const router = createRouter({
       name: 'admin',
       path: '/admin',
       component: AdminScreen,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        wideLayout: true,
+        transition: 'page-slide',
+      },
+    },
+    {
+      name: 'admin-order',
+      path: '/admin/orders/:id',
+      component: AdminOrderScreen,
       meta: {
         requiresAuth: true,
         requiresAdmin: true,
