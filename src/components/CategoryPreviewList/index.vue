@@ -66,8 +66,7 @@ const goToNext = () => emblaApi.value?.scrollNext()
   width: 100%;
   padding: 18px 16px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-border);
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.03);
   position: relative;
 }
 
@@ -110,8 +109,7 @@ const goToNext = () => emblaApi.value?.scrollNext()
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(18, 24, 21, 0.92);
-  border: 1px solid var(--surface-border);
+  background: rgba(18, 24, 21, 0.84);
   transition:
     transform 0.15s ease,
     background-color 0.15s ease;

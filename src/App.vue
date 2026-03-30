@@ -2,8 +2,8 @@
   <div class="app">
     <TheHeader class="app_header" />
 
-    <div class="router-container">
-      <aside class="app_categories-list-wrap">
+    <div class="router-container" :class="{ 'router-container--wide': isWideLayout }">
+      <aside v-if="!isWideLayout" class="app_categories-list-wrap">
         <CategoriesList class="app_categories-list" />
       </aside>
 
@@ -15,7 +15,7 @@
         </RouterView>
       </main>
 
-      <aside class="app_cart-wrap">
+      <aside v-if="!isWideLayout" class="app_cart-wrap">
         <TheCart class="app_cart" />
       </aside>
     </div>
@@ -23,17 +23,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
 import TheHeader from './components/TheHeader'
 import TheCart from './components/Cart'
 import CategoriesList from './components/CategoriesList'
 import { useAuthStore } from './stores/auth'
 import { useUsersStore } from './stores/users'
 
+const route = useRoute()
 const authStore = useAuthStore()
 const usersStore = useUsersStore()
 const { isAuthenticated } = storeToRefs(authStore)
+const isWideLayout = computed(() => Boolean(route.meta.wideLayout))
 
 const syncProfile = async () => {
   if (!isAuthenticated.value) {
@@ -81,6 +84,10 @@ watch(isAuthenticated, () => {
   grid-template-columns: 250px minmax(0, 1fr) 340px;
   align-items: start;
   gap: 24px;
+}
+
+.router-container--wide {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .app_categories-list-wrap,

@@ -27,6 +27,11 @@
           <span class="material-symbols">restaurant_menu</span>
           <span>Меню</span>
         </RouterLink>
+
+        <RouterLink v-if="role === 'admin'" class="header__nav-link" :to="{ name: 'admin' }">
+          <span class="material-symbols">shield_person</span>
+          <span>Админка</span>
+        </RouterLink>
       </nav>
 
       <div class="header__auth">
@@ -84,7 +89,7 @@ const catalogStore = useCatalogStore()
 const { searchQuery } = storeToRefs(catalogStore)
 const authStore = useAuthStore()
 const usersStore = useUsersStore()
-const { isAuthenticated } = storeToRefs(authStore)
+const { isAuthenticated, role } = storeToRefs(authStore)
 const { profile } = storeToRefs(usersStore)
 
 const isAuthPopupOpen = ref(false)
@@ -109,8 +114,8 @@ const handleLogout = async () => {
 .header {
   width: 100%;
   border-bottom: 1px solid var(--surface-border);
-  background: rgba(24, 18, 21, 0.96);
-  backdrop-filter: blur(4px);
+  background: rgba(18, 14, 17, 0.97);
+  backdrop-filter: blur(10px);
 }
 
 .header__inner {
@@ -151,7 +156,7 @@ const handleLogout = async () => {
   gap: 8px;
   border-radius: 12px;
   border: 1px solid var(--surface-border);
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.04);
   padding: 0 12px;
 
   span {
@@ -188,7 +193,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 8px;
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   white-space: nowrap;
 }
 
@@ -238,8 +243,7 @@ const handleLogout = async () => {
   padding: 6px;
   padding-left: 12px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .header__profile-link {
@@ -250,7 +254,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 8px;
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   white-space: nowrap;
 }
 
@@ -273,7 +277,7 @@ const handleLogout = async () => {
 }
 
 .header__logout-button {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .header__auth-button:disabled,

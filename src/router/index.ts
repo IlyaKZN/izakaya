@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 const MainScreen = () => import('@/screens/Main')
 const MenuItemScreen = () => import('@/screens/MenuItem')
 const ProfileScreen = () => import('@/screens/Profile')
+const AdminScreen = () => import('@/screens/Admin')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -49,15 +50,36 @@ const router = createRouter({
         transition: 'page-slide',
       },
     },
+    {
+      name: 'admin',
+      path: '/admin',
+      component: AdminScreen,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        wideLayout: true,
+        transition: 'page-slide',
+      },
+    },
   ],
 })
 
 router.beforeEach((to) => {
-  if (!to.meta.requiresAuth) {
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAdmin) {
+    if (!authStore.isAuthenticated || authStore.role !== 'admin') {
+      return {
+        name: 'main',
+      }
+    }
+
     return true
   }
 
-  const authStore = useAuthStore()
+  if (!to.meta.requiresAuth) {
+    return true
+  }
 
   if (authStore.isAuthenticated) {
     return true

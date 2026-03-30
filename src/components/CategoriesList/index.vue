@@ -41,8 +41,6 @@ onMounted(() => {
   padding: 16px;
   border-radius: var(--radius-lg);
   background: var(--surface-1);
-  border: 1px solid var(--surface-border);
-  box-shadow: var(--shadow-card);
 }
 
 .categories-list__title {
@@ -71,8 +69,8 @@ onMounted(() => {
 }
 
 .categories-list__item--active {
-  background: rgba(127, 46, 67, 0.3);
-  border: 1px solid rgba(127, 46, 67, 0.5);
+  background: rgba(127, 46, 67, 0.24);
+  color: #fff;
 }
 
 @media (max-width: 900px) {

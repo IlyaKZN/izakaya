@@ -119,7 +119,7 @@ function goToItem() {
   min-width: 224px;
   display: flex;
   flex-direction: column;
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--surface-border);
   border-radius: 16px;
   transition:
@@ -130,7 +130,7 @@ function goToItem() {
   &:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-card);
-    border-color: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.18);
 
     .menu-item-card__image {
       transform: scale(1.08);
@@ -161,7 +161,6 @@ function goToItem() {
   color: #fff;
   background: rgba(15, 15, 15, 0.72);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .menu-item-card__image {

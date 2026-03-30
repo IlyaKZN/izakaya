@@ -353,7 +353,7 @@ watch(
   gap: 8px;
   padding: 0 12px;
   border-radius: var(--radius-md);
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--surface-border);
   color: var(--text-secondary);
   min-width: 0;
@@ -368,7 +368,7 @@ watch(
 
 .cart {
   width: 100%;
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--surface-border);
   padding: 16px;
   border-radius: var(--radius-lg);
@@ -376,7 +376,6 @@ watch(
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  box-shadow: var(--shadow-card);
 }
 
 .cart__items {
