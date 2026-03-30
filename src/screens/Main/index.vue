@@ -32,6 +32,7 @@ import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import CategoryPreviewList from '@/components/CategoryPreviewList'
 import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
+import { getProductCategoryLabel } from '@/utils/products'
 
 defineOptions({
   name: 'MainScreen',
@@ -59,7 +60,7 @@ const sections = computed(() => {
     .filter((category) => category !== ALL_CATEGORY)
     .map((category) => ({
       title: category,
-      items: filteredMenuList.value.filter((item) => item.category?.name === category),
+      items: filteredMenuList.value.filter((item) => getProductCategoryLabel(item) === category),
     }))
     .filter((section) => section.items.length > 0)
 })

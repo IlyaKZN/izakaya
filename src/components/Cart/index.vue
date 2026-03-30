@@ -31,14 +31,23 @@
         Пока пусто. Добавьте блюда из каталога.
       </div>
 
-      <template v-for="(cartItem, index) in cartItemList" :key="cartItem.menuItem.id">
+      <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
         <CartItem :item="cartItem" />
 
         <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
       </template>
 
+      <div v-if="cartItemList.length" class="cart__phone">
+        <input
+          v-model.trim="recipientPhone"
+          class="cart__field-input"
+          type="tel"
+          placeholder="Телефон получателя"
+        />
+      </div>
+
       <div v-if="cartItemList.length" class="cart__promo">
-        <input v-model.trim="promoCode" class="cart__promo-input" placeholder="Промокод" />
+        <input v-model.trim="promoCode" class="cart__field-input" placeholder="Промокод" />
         <button type="button" class="cart__promo-button" @click="applyPromoCode">Применить</button>
       </div>
 
@@ -81,13 +90,22 @@
         Минимальная сумма для доставки: {{ minDeliveryOrder }} ₽
       </div>
 
+      <div v-if="checkoutError" class="cart__notice cart__notice--error">
+        {{ checkoutError }}
+      </div>
+
+      <div v-if="checkoutSuccessMessage" class="cart__notice cart__notice--success">
+        {{ checkoutSuccessMessage }}
+      </div>
+
       <button
         v-if="cartItemList.length"
         type="button"
         class="cart__checkout"
         :disabled="isCheckoutDisabled"
+        @click="submitOrder"
       >
-        Перейти к оформлению
+        {{ isSubmittingOrder ? 'Оформляем заказ...' : 'Перейти к оформлению' }}
       </button>
     </div>
 
@@ -97,8 +115,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
+import { useCartStore } from '@/stores/cart'
+import { useOrdersStore } from '@/stores/orders'
 import CartItem from '../CartItem'
 import AddressPopup from '../AddressPopup'
 import { getProductPrice } from '@/utils/products'
@@ -115,20 +134,27 @@ const PROMO_DISCOUNTS: Record<string, number> = {
 }
 
 const cartStore = useCartStore()
-const { cartItems } = storeToRefs(cartStore)
+const ordersStore = useOrdersStore()
+const { cartItemList } = storeToRefs(cartStore)
 
 const isAddressPopupOpen = ref(false)
 const deliveryAddress = ref('Адрес доставки')
 const orderMode = ref<TOrderMode>('delivery')
+const recipientPhone = ref('')
 const promoCode = ref('')
 const appliedPromoPercent = ref(0)
 const useBonuses = ref(false)
+const isSubmittingOrder = ref(false)
+const checkoutError = ref('')
+const checkoutSuccessMessage = ref('')
 
 const minDeliveryOrder = 800
-const cartItemList = computed(() => Object.values(cartItems.value))
 
 const subtotal = computed(() =>
-  cartItemList.value.reduce((sum, item) => sum + getProductPrice(item.menuItem) * item.count, 0),
+  cartItemList.value.reduce(
+    (sum, item) => sum + getProductPrice(item.menuItem, item.selectedVariant) * item.count,
+    0,
+  ),
 )
 
 const deliveryFee = computed(() => {
@@ -154,7 +180,9 @@ const totalPrice = computed(() =>
 
 const isCheckoutDisabled = computed(
   () =>
+    isSubmittingOrder.value ||
     cartItemList.value.length === 0 ||
+    !recipientPhone.value ||
     (orderMode.value === 'delivery' && subtotal.value < minDeliveryOrder),
 )
 
@@ -165,6 +193,35 @@ const handleAddressConfirm = (address: string) => {
 const applyPromoCode = () => {
   const normalized = promoCode.value.toUpperCase()
   appliedPromoPercent.value = PROMO_DISCOUNTS[normalized] ?? 0
+}
+
+const submitOrder = async () => {
+  if (isCheckoutDisabled.value) return
+
+  isSubmittingOrder.value = true
+  checkoutError.value = ''
+  checkoutSuccessMessage.value = ''
+
+  try {
+    const order = await ordersStore.createOrder({
+      recipient_phone: recipientPhone.value,
+      persons: 1,
+      payment_method: 'cash',
+      promocode: promoCode.value || null,
+      comment: orderMode.value === 'pickup' ? 'Самовывоз' : null,
+      items: cartStore.toOrderItems(),
+    })
+
+    cartStore.clear()
+    promoCode.value = ''
+    appliedPromoPercent.value = 0
+    useBonuses.value = false
+    checkoutSuccessMessage.value = `Заказ ${order.id} успешно создан`
+  } catch (error) {
+    checkoutError.value = error instanceof Error ? error.message : 'Не удалось оформить заказ'
+  } finally {
+    isSubmittingOrder.value = false
+  }
 }
 </script>
 
@@ -242,7 +299,7 @@ const applyPromoCode = () => {
   gap: 8px;
 }
 
-.cart__promo-input {
+.cart__field-input {
   height: 38px;
   border-radius: 10px;
   border: 1px solid var(--surface-border);
@@ -250,6 +307,7 @@ const applyPromoCode = () => {
   color: #fff;
   padding: 0 10px;
   outline: none;
+  width: 100%;
 }
 
 .cart__promo-button {
@@ -296,6 +354,16 @@ const applyPromoCode = () => {
   border: 1px solid rgba(127, 46, 67, 0.35);
   color: #f0dde3;
   font-size: 13px;
+}
+
+.cart__notice--error {
+  background: rgba(176, 63, 63, 0.18);
+  border-color: rgba(176, 63, 63, 0.35);
+}
+
+.cart__notice--success {
+  background: rgba(63, 176, 108, 0.18);
+  border-color: rgba(63, 176, 108, 0.35);
 }
 
 .cart__checkout {

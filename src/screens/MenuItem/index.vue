@@ -44,6 +44,27 @@
           {{ item.description }}
         </p>
 
+        <div v-if="item.variants.length" class="menu-item-screen__variant-picker">
+          <span class="menu-item-screen__variant-title">Выберите вариант</span>
+
+          <div class="menu-item-screen__variant-list">
+            <button
+              v-for="variant in item.variants"
+              :key="variant.id"
+              type="button"
+              class="menu-item-screen__variant-button"
+              :class="{
+                'menu-item-screen__variant-button--active': selectedVariant?.id === variant.id,
+              }"
+              @click="selectedVariantId = variant.id"
+            >
+              <span>{{ variant.name }}</span>
+              <span>{{ variant.quantity_value }} г</span>
+              <span>{{ formatProductPrice(item, variant) }}</span>
+            </button>
+          </div>
+        </div>
+
         <span class="menu-item-screen__price"> {{ productPrice }} </span>
 
         <span v-if="variantsLabel" class="menu-item-screen__variants">
@@ -52,7 +73,7 @@
 
         <div v-if="!cartItem" class="menu-item-screen__add-container">
           <button
-            @click="cartStore.addToCart(item)"
+            @click="cartStore.addToCart(item, selectedVariant)"
             class="menu-item-screen__add-to-cart-button"
             type="button"
           >
@@ -64,7 +85,7 @@
           <button
             class="menu-item-screen__change-count-button"
             type="button"
-            @click="cartStore.removeFromCart(item)"
+            @click="cartStore.removeFromCart(item, selectedVariant)"
           >
             <span class="material-symbols"> remove </span>
           </button>
@@ -76,7 +97,7 @@
           <button
             class="menu-item-screen__change-count-button"
             type="button"
-            @click="cartStore.addToCart(item)"
+            @click="cartStore.addToCart(item, selectedVariant)"
           >
             <span class="material-symbols"> add </span>
           </button>
@@ -90,12 +111,13 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
-import { storeToRefs } from 'pinia'
 import { useProductsStore } from '@/stores/products'
 import {
   formatProductPrice,
+  getDefaultProductVariant,
   getProductImage,
   getProductIngredients,
+  getProductVariantById,
   getProductVariantsLabel,
   getProductWeight,
 } from '@/utils/products'
@@ -108,17 +130,31 @@ const router = useRouter()
 const route = useRoute()
 const cartStore = useCartStore()
 const productsStore = useProductsStore()
-const { cartItems } = storeToRefs(cartStore)
 
 const isLoading = ref(false)
+const selectedVariantId = ref<string | null>(null)
 const itemId = computed(() => String(route.params.id))
 
 const item = computed(() => productsStore.productsById[itemId.value])
-const cartItem = computed(() => cartItems.value[itemId.value])
+const selectedVariant = computed(() => {
+  if (!item.value) return null
+
+  return (
+    getProductVariantById(item.value, selectedVariantId.value) ??
+    getDefaultProductVariant(item.value)
+  )
+})
+const cartItem = computed(() =>
+  item.value ? cartStore.getCartItem(item.value, selectedVariant.value) : null,
+)
 const productImage = computed(() => (item.value ? getProductImage(item.value) : ''))
 const ingredients = computed(() => (item.value ? getProductIngredients(item.value) : []))
-const productPrice = computed(() => (item.value ? formatProductPrice(item.value) : ''))
-const weightLabel = computed(() => (item.value ? getProductWeight(item.value) : null))
+const productPrice = computed(() =>
+  item.value ? formatProductPrice(item.value, selectedVariant.value) : '',
+)
+const weightLabel = computed(() =>
+  item.value ? getProductWeight(item.value, selectedVariant.value) : null,
+)
 const variantsLabel = computed(() => (item.value ? getProductVariantsLabel(item.value) : null))
 
 async function loadProduct() {
@@ -138,8 +174,17 @@ onMounted(() => {
 })
 
 watch(itemId, () => {
+  selectedVariantId.value = null
   void loadProduct().catch(() => undefined)
 })
+
+watch(
+  item,
+  (nextItem) => {
+    selectedVariantId.value = nextItem ? (getDefaultProductVariant(nextItem)?.id ?? null) : null
+  },
+  { immediate: true },
+)
 
 function goToMain() {
   router.push({
@@ -242,6 +287,39 @@ function goToMain() {
 .menu-item-screen__ingredient {
   font-size: 16px;
   color: var(--text-secondary);
+}
+
+.menu-item-screen__variant-picker {
+  margin-bottom: 20px;
+}
+
+.menu-item-screen__variant-title {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+}
+
+.menu-item-screen__variant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.menu-item-screen__variant-button {
+  min-width: 150px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+
+.menu-item-screen__variant-button--active {
+  border-color: rgba(127, 46, 67, 0.7);
+  background: rgba(127, 46, 67, 0.24);
 }
 
 .menu-item-screen__price {

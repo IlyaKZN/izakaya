@@ -44,12 +44,12 @@ export type AddressRead = {
   city: string
   street: string
   house: string
-  apartment: string | null
-  entrance: string | null
-  floor: string | null
-  comment: string | null
-  lat: number | null
-  lng: number | null
+  apartment?: string | null
+  entrance?: string | null
+  floor?: string | null
+  comment?: string | null
+  lat?: number | null
+  lng?: number | null
   id: Uuid
   user_id: Uuid
   created_at: string
@@ -58,7 +58,7 @@ export type AddressRead = {
 export type CategoryRead = {
   name: string
   is_active?: boolean
-  sort_order: number | null
+  sort_order?: number | null
   id: Uuid
 }
 
@@ -108,15 +108,15 @@ export type ProductUpdate = {
 export type ProductRead = {
   id: Uuid
   name: string
-  description: string | null
-  price: string | null
+  description?: string | null
+  price?: string | null
   category_id: Uuid
-  image_url: string | null
+  image_url?: string | null
   is_active: boolean
   created_at: string
   variants: ProductVariantRead[]
   removable_ingredients: ProductRemovableIngredientRead[]
-  category: CategoryRead | null
+  category?: CategoryRead | null
 }
 
 export type OrderAddressInput = {
@@ -167,7 +167,7 @@ export type OrderStatusEnum = 'new' | 'cooking' | 'delivering' | 'completed' | '
 export type OrderRead = {
   id: Uuid
   user_id: Uuid
-  address_id: Uuid | null
+  address_id?: Uuid | null
   recipient_phone: string
   persons: number
   price: string
@@ -175,10 +175,10 @@ export type OrderRead = {
   delivery_price: string
   payment_method: string
   payment_status: string
-  comment: string | null
+  comment?: string | null
   status: OrderStatusEnum
   created_at: string
-  updated_at: string | null
+  updated_at?: string | null
   items: OrderItemRead[]
 }
 
@@ -189,9 +189,9 @@ export type OrderStatusUpdate = {
 export type UserRead = {
   phone: string
   name: string
-  telegram_id: number | null
+  telegram_id?: number | null
   id: Uuid
   is_active: boolean
   created_at: string
-  last_address: AddressRead | null
+  last_address?: AddressRead | null
 }

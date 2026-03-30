@@ -40,10 +40,33 @@
         <template v-if="activeTab === 'delivery'">
           <h2 class="address-popup__title">Адрес доставки</h2>
 
-          <button type="button" class="address-popup__address-select">
-            <span>{{ form.street || 'Введите улицу и дом' }}</span>
-            <span class="material-symbols">expand_more</span>
-          </button>
+          <label class="address-popup__field">
+            <span class="address-popup__label">Улица и дом</span>
+            <div class="address-popup__address-row">
+              <input
+                v-model.trim="form.street"
+                class="address-popup__input"
+                type="text"
+                placeholder="Например, Кремлевская улица, 27"
+                @keydown.enter.prevent="searchAddress"
+              />
+              <button
+                type="button"
+                class="address-popup__search"
+                :disabled="!canSearchAddress"
+                @click="searchAddress"
+              >
+                {{ isGeocoding ? 'Поиск...' : 'Найти' }}
+              </button>
+            </div>
+          </label>
+
+          <p class="address-popup__hint">
+            Кликните по карте Казани, перетащите метку или введите адрес и нажмите «Найти».
+          </p>
+          <p v-if="addressLookupError" class="address-popup__hint address-popup__hint--error">
+            {{ addressLookupError }}
+          </p>
 
           <div class="address-popup__grid">
             <input
@@ -113,19 +136,24 @@
 
       <div class="address-popup__right">
         <div class="address-popup__map-header">
-          <span>Карта зон доставки</span>
-          <div class="address-popup__zones">
-            <span class="address-popup__zone address-popup__zone--first">Зона 1</span>
-            <span class="address-popup__zone address-popup__zone--second">Зона 2</span>
-            <span class="address-popup__zone address-popup__zone--third">Зона 3</span>
+          <div>
+            <span class="address-popup__map-title">Карта Казани</span>
+            <p class="address-popup__map-subtitle">
+              {{ selectedAddressLabel || 'Выберите адрес на карте' }}
+            </p>
           </div>
+          <span class="address-popup__map-badge">Яндекс.Карты</span>
         </div>
 
-        <div class="address-popup__map">
-          <div class="address-popup__circle address-popup__circle--one"></div>
-          <div class="address-popup__circle address-popup__circle--two"></div>
-          <div class="address-popup__circle address-popup__circle--three"></div>
-          <div class="address-popup__map-center">Ваш адрес</div>
+        <div class="address-popup__map-shell">
+          <div ref="mapElement" class="address-popup__map" :class="{ 'address-popup__map--error': !!mapError }"></div>
+          <div v-if="isMapLoading" class="address-popup__map-overlay">
+            Загружаем карту Казани...
+          </div>
+          <div v-else-if="mapError" class="address-popup__map-overlay address-popup__map-overlay--error">
+            <p>{{ mapError }}</p>
+            <p>Добавьте `VITE_YANDEX_MAPS_API_KEY` в `.env`, чтобы выбор адреса на карте заработал.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -133,14 +161,23 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import BasePopup from '@/components/BasePopup'
+import {
+  KAZAN_BOUNDS,
+  KAZAN_CENTER,
+  loadYandexMapsApi,
+  normalizeAddressLabel,
+  type YandexMapInstance,
+  type YandexMapsApi,
+  type YandexPlacemarkInstance,
+} from '@/utils/yandexMaps'
 
 defineOptions({
   name: 'AddressPopup',
 })
 
-defineProps<{
+const props = defineProps<{
   modelValue: boolean
 }>()
 
@@ -149,7 +186,15 @@ const emit = defineEmits<{
   (e: 'confirm', value: string): void
 }>()
 
+const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY?.trim() ?? ''
+
 const activeTab = ref<'delivery' | 'pickup'>('delivery')
+const mapElement = ref<HTMLElement | null>(null)
+const isMapLoading = ref(false)
+const isGeocoding = ref(false)
+const mapError = ref('')
+const addressLookupError = ref('')
+const selectedAddressLabel = ref('')
 
 const form = reactive({
   street: 'Кремлевская улица, 27',
@@ -163,10 +208,187 @@ const form = reactive({
   saveAddress: false,
 })
 
+let ymaps: YandexMapsApi | null = null
+let map: YandexMapInstance | null = null
+let placemark: YandexPlacemarkInstance | null = null
+
+const canSearchAddress = computed(
+  () => !!form.street.trim() && !isGeocoding.value && !isMapLoading.value && !mapError.value,
+)
+
+const updatePlacemark = (coordinates: [number, number], caption: string) => {
+  if (!placemark) return
+
+  placemark.geometry.setCoordinates(coordinates)
+  placemark.properties.set('iconCaption', caption)
+}
+
+const applySelectedAddress = (address: string, coordinates?: [number, number]) => {
+  const normalizedAddress = normalizeAddressLabel(address)
+  form.street = normalizedAddress
+  selectedAddressLabel.value = normalizedAddress
+
+  if (coordinates) {
+    updatePlacemark(coordinates, normalizedAddress)
+    map?.setCenter(coordinates, 16, { duration: 250 })
+  }
+}
+
+const reverseGeocode = async (coordinates: [number, number]) => {
+  if (!ymaps) return
+
+  isGeocoding.value = true
+  addressLookupError.value = ''
+
+  try {
+    const result = await ymaps.geocode(coordinates, {
+      boundedBy: KAZAN_BOUNDS,
+      kind: 'house',
+      results: 1,
+      strictBounds: true,
+    })
+    const firstGeoObject = result.geoObjects.get(0)
+
+    if (!firstGeoObject) {
+      throw new Error('Адрес не найден в пределах Казани.')
+    }
+
+    const address =
+      firstGeoObject.getAddressLine?.() ??
+      [
+        firstGeoObject.getLocalities?.()?.[0],
+        firstGeoObject.getThoroughfare?.(),
+        firstGeoObject.getPremiseNumber?.(),
+      ]
+        .filter(Boolean)
+        .join(', ')
+
+    if (!address) {
+      throw new Error('Не удалось определить адрес.')
+    }
+
+    applySelectedAddress(address, coordinates)
+  } catch (error) {
+    addressLookupError.value =
+      error instanceof Error ? error.message : 'Не удалось определить адрес по точке на карте.'
+  } finally {
+    isGeocoding.value = false
+  }
+}
+
+const searchAddress = async () => {
+  if (!ymaps || !form.street.trim() || isGeocoding.value) return
+
+  isGeocoding.value = true
+  addressLookupError.value = ''
+
+  try {
+    const query = form.street.toLowerCase().includes('казань')
+      ? form.street
+      : `Казань, ${form.street}`
+
+    const result = await ymaps.geocode(query, {
+      boundedBy: KAZAN_BOUNDS,
+      results: 1,
+      strictBounds: true,
+    })
+    const firstGeoObject = result.geoObjects.get(0)
+
+    if (!firstGeoObject) {
+      throw new Error('Не нашли такой адрес в Казани.')
+    }
+
+    const coordinates = firstGeoObject.geometry.getCoordinates()
+    const address = firstGeoObject.getAddressLine?.() ?? query
+
+    applySelectedAddress(address, coordinates)
+  } catch (error) {
+    addressLookupError.value = error instanceof Error ? error.message : 'Не удалось найти адрес.'
+  } finally {
+    isGeocoding.value = false
+  }
+}
+
+const initMap = async () => {
+  if (map || !mapElement.value) return
+  if (!YANDEX_MAPS_API_KEY) {
+    mapError.value = 'Карта недоступна без API-ключа Яндекс.Карт.'
+    return
+  }
+
+  isMapLoading.value = true
+  mapError.value = ''
+
+  try {
+    ymaps = await loadYandexMapsApi(YANDEX_MAPS_API_KEY)
+
+    map = new ymaps.Map(
+      mapElement.value,
+      {
+        center: KAZAN_CENTER,
+        zoom: 12,
+        controls: ['zoomControl', 'fullscreenControl'],
+      },
+      {
+        suppressMapOpenBlock: true,
+      },
+    )
+
+    placemark = new ymaps.Placemark(
+      KAZAN_CENTER,
+      {
+        iconCaption: normalizeAddressLabel(form.street),
+        hintContent: 'Выбранный адрес',
+      },
+      {
+        draggable: true,
+        preset: 'islands#redDotIconWithCaption',
+      },
+    )
+
+    map.geoObjects.add(placemark)
+
+    map.events.add('click', (event) => {
+      void reverseGeocode(event.get('coords'))
+    })
+
+    placemark.events.add('dragend', () => {
+      const coordinates = placemark?.geometry.getCoordinates()
+
+      if (coordinates) {
+        void reverseGeocode(coordinates)
+      }
+    })
+
+    await reverseGeocode(KAZAN_CENTER)
+  } catch (error) {
+    mapError.value =
+      error instanceof Error ? error.message : 'Не удалось инициализировать Яндекс.Карты.'
+  } finally {
+    isMapLoading.value = false
+  }
+}
+
 const confirmAddress = () => {
   emit('confirm', form.street)
   emit('update:modelValue', false)
 }
+
+watch(
+  () => props.modelValue,
+  async (isOpen) => {
+    if (!isOpen) return
+
+    await nextTick()
+    await initMap()
+    map?.container?.fitToViewport?.()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  map?.destroy()
+})
 </script>
 
 <style lang="scss">
@@ -240,7 +462,6 @@ const confirmAddress = () => {
   line-height: 1.1;
 }
 
-.address-popup__address-select,
 .address-popup__input,
 .address-popup__textarea {
   width: 100%;
@@ -250,17 +471,35 @@ const confirmAddress = () => {
   border-radius: 12px;
 }
 
-.address-popup__address-select {
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  margin-bottom: 12px;
+.address-popup__address-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
 
-  span:last-child {
-    color: #b9adb2;
-  }
+.address-popup__search {
+  min-width: 112px;
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: rgba(138, 97, 112, 0.2);
+  border: 1px solid rgba(138, 97, 112, 0.45);
+  color: #fff;
+}
+
+.address-popup__search:disabled {
+  opacity: 0.55;
+}
+
+.address-popup__hint {
+  margin: 0 0 12px;
+  color: #b9adb2;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.address-popup__hint--error {
+  color: #f2a6a6;
 }
 
 .address-popup__grid {
@@ -343,93 +582,80 @@ const confirmAddress = () => {
 .address-popup__map-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-right: 56px;
   margin-bottom: 12px;
 }
 
-.address-popup__zones {
-  display: flex;
-  gap: 8px;
+.address-popup__map-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
 }
 
-.address-popup__zone {
-  height: 26px;
-  border-radius: 999px;
-  padding: 0 10px;
+.address-popup__map-subtitle {
+  margin: 6px 0 0;
+  color: #b9adb2;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.address-popup__map-badge {
   display: inline-flex;
   align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1eced;
   font-size: 12px;
 }
 
-.address-popup__zone--first {
-  background: rgba(132, 45, 66, 0.45);
-}
-
-.address-popup__zone--second {
-  background: rgba(132, 45, 66, 0.28);
-}
-
-.address-popup__zone--third {
-  background: rgba(132, 45, 66, 0.17);
+.address-popup__map-shell {
+  position: relative;
+  flex: 1;
 }
 
 .address-popup__map {
-  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), #18161b;
-  background-size: 44px 44px;
-  position: relative;
   overflow: hidden;
+  background: #18161b;
 }
 
-.address-popup__circle {
+.address-popup__map--error {
+  background:
+    linear-gradient(135deg, rgba(138, 97, 112, 0.16), transparent),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    #18161b;
+}
+
+.address-popup__map-overlay {
   position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(132, 45, 66, 0.45);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  color: #f1eced;
+  background: rgba(17, 16, 19, 0.74);
+  backdrop-filter: blur(4px);
 }
 
-.address-popup__circle--one {
-  width: 240px;
-  height: 240px;
-  top: 46%;
-  left: 54%;
-  transform: translate(-50%, -50%);
-  background: rgba(132, 45, 66, 0.12);
-}
+.address-popup__map-overlay--error {
+  flex-direction: column;
+  gap: 8px;
 
-.address-popup__circle--two {
-  width: 360px;
-  height: 360px;
-  top: 46%;
-  left: 54%;
-  transform: translate(-50%, -50%);
-  background: rgba(132, 45, 66, 0.08);
-}
-
-.address-popup__circle--three {
-  width: 490px;
-  height: 490px;
-  top: 46%;
-  left: 54%;
-  transform: translate(-50%, -50%);
-  background: rgba(132, 45, 66, 0.04);
-}
-
-.address-popup__map-center {
-  position: absolute;
-  top: 46%;
-  left: 54%;
-  transform: translate(-50%, -50%);
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: #8a6170;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  p {
+    margin: 0;
+    max-width: 320px;
+    line-height: 1.45;
+  }
 }
 
 @media (max-width: 1060px) {
@@ -444,7 +670,7 @@ const confirmAddress = () => {
   }
 
   .address-popup__right {
-    min-height: 340px;
+    min-height: 420px;
   }
 }
 
@@ -467,8 +693,11 @@ const confirmAddress = () => {
     grid-template-columns: 1fr;
   }
 
+  .address-popup__address-row {
+    grid-template-columns: 1fr;
+  }
+
   .address-popup__map-header {
-    align-items: flex-start;
     flex-direction: column;
     gap: 8px;
     margin-right: 0;

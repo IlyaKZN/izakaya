@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { useProductsStore } from '@/stores/products'
 import type { ProductRead } from '@/types/api'
+import { getProductCategoryLabel } from '@/utils/products'
 
 export const ALL_CATEGORY = 'Все'
 
@@ -13,7 +14,7 @@ function matchesQuery(product: ProductRead, query: string) {
   const searchableValues = [
     product.name,
     product.description ?? '',
-    product.category?.name ?? '',
+    getProductCategoryLabel(product),
     ...product.removable_ingredients.map((ingredient) => ingredient.ingredient_name),
     ...product.variants.map((variant) => variant.name),
   ]
@@ -31,15 +32,10 @@ export const useCatalogStore = defineStore('catalog', () => {
   const errorMessage = ref('')
 
   const categories = computed(() => {
-    const categoriesMap = new Map<string, number | null>();
-
-    console.log(productsStore.products);
-
+    const categoriesMap = new Map<string, number | null>()
 
     productsStore.products.forEach((product) => {
-      if (!product.category?.name) return
-
-      categoriesMap.set(product.category.name, product.category.sort_order ?? null)
+      categoriesMap.set(getProductCategoryLabel(product), product.category?.sort_order ?? null)
     })
 
     const sortedCategories = [...categoriesMap.entries()]
@@ -61,7 +57,8 @@ export const useCatalogStore = defineStore('catalog', () => {
   const filteredMenuList = computed(() => {
     return productsStore.products.filter((product) => {
       const matchesCategory =
-        selectedCategory.value === ALL_CATEGORY || product.category?.name === selectedCategory.value
+        selectedCategory.value === ALL_CATEGORY ||
+        getProductCategoryLabel(product) === selectedCategory.value
 
       if (!matchesCategory) return false
 

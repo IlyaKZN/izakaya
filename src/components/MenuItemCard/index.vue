@@ -42,11 +42,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
-import { storeToRefs } from 'pinia'
 import FadeTransition from '../transitions/Fade'
 import { useRouter } from 'vue-router'
 import type { ProductRead } from '@/types/api'
-import { formatProductPrice, getProductImage, getProductWeight } from '@/utils/products'
+import {
+  formatProductPrice,
+  getDefaultProductVariant,
+  getProductImage,
+  getProductWeight,
+} from '@/utils/products'
 
 defineOptions({
   name: 'MenuItemCard',
@@ -58,12 +62,12 @@ const { menuItem } = defineProps<{
 
 const router = useRouter()
 const cartStore = useCartStore()
-const { cartItems } = storeToRefs(cartStore)
 
-const cartItem = computed(() => cartItems.value[menuItem.id])
+const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
+const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
 const productImage = computed(() => getProductImage(menuItem))
-const productPrice = computed(() => formatProductPrice(menuItem))
-const weightLabel = computed(() => getProductWeight(menuItem))
+const productPrice = computed(() => formatProductPrice(menuItem, defaultVariant.value))
+const weightLabel = computed(() => getProductWeight(menuItem, defaultVariant.value))
 const menuDescription = computed(
   () => menuItem.description || menuItem.category?.name || 'Без описания',
 )
