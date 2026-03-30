@@ -213,15 +213,61 @@
         </div>
 
         <div v-if="productMode === 'edit'" class="admin-toolbar">
-          <label class="admin-field admin-field--grow">
+          <div class="admin-field admin-field--grow">
             <span>Товар</span>
-            <BaseSelect
-              v-model="selectedProductId"
-              :options="productOptions"
-              placeholder="Выберите товар"
-              @change="fillProductFormFromSelection"
-            />
-          </label>
+
+            <div v-if="groupedProducts.length" class="admin-product-groups">
+              <section
+                v-for="group in groupedProducts"
+                :key="group.id"
+                class="admin-product-group"
+              >
+                <div class="admin-product-group__header">
+                  <h3 class="admin-product-group__title">{{ group.name }}</h3>
+                  <span class="admin-product-group__count">{{ group.products.length }}</span>
+                </div>
+
+                <div class="admin-product-picker">
+                  <button
+                    v-for="product in group.products"
+                    :key="product.id"
+                    type="button"
+                    class="admin-product-card"
+                    :class="{ 'admin-product-card--active': selectedProductId === product.id }"
+                    @click="selectProduct(product.id)"
+                  >
+                    <img
+                      class="admin-product-card__image"
+                      :src="getProductImage(product, { thumbnail: true })"
+                      :alt="product.name"
+                      loading="lazy"
+                    />
+
+                    <div class="admin-product-card__body">
+                      <div class="admin-product-card__top">
+                        <strong>{{ product.name }}</strong>
+                        <span
+                          class="admin-product-card__status"
+                          :class="{
+                            'admin-product-card__status--active': product.is_active,
+                            'admin-product-card__status--inactive': !product.is_active,
+                          }"
+                        >
+                          {{ product.is_active ? 'Активен' : 'Скрыт' }}
+                        </span>
+                      </div>
+
+                      <p class="admin-product-card__meta">
+                        {{ formatPrice(product.price ?? '0') }}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <div v-else class="admin-empty">Список товаров пока пуст.</div>
+          </div>
         </div>
 
         <div v-if="productError" class="admin-notice admin-notice--error">{{ productError }}</div>
@@ -328,9 +374,11 @@ import { storeToRefs } from 'pinia'
 import BaseSelect from '@/components/BaseSelect'
 import { useAdminStore } from '@/stores/admin'
 import { useAuthStore } from '@/stores/auth'
+import { useCategoriesStore } from '@/stores/categories'
 import { useProductsStore } from '@/stores/products'
 import { useSiteStore } from '@/stores/site'
 import type { OrderRead, OrderStatusEnum, ProductRead, ProductVariantCreate } from '@/types/api'
+import { getProductImage } from '@/utils/products'
 
 defineOptions({
   name: 'AdminScreen',
@@ -342,11 +390,13 @@ type ProductMode = 'create' | 'edit'
 const authStore = useAuthStore()
 const router = useRouter()
 const adminStore = useAdminStore()
+const categoriesStore = useCategoriesStore()
 const productsStore = useProductsStore()
 const siteStore = useSiteStore()
 
 const { role } = storeToRefs(authStore)
 const { adminOrders } = storeToRefs(adminStore)
+const { categories } = storeToRefs(categoriesStore)
 const { products } = storeToRefs(productsStore)
 const { siteStatus, health } = storeToRefs(siteStore)
 
@@ -406,13 +456,44 @@ const sortedOrders = computed(() =>
   ),
 )
 
-const productOptions = computed(() => [
-  { value: '', label: 'Выберите товар' },
-  ...products.value.map((product) => ({
-    value: product.id,
-    label: product.name,
-  })),
-])
+const groupedProducts = computed(() => {
+  const categoryOrder = new Map(categories.value.map((category, index) => [category.id, index]))
+  const groups = new Map<
+    string,
+    { id: string; name: string; sortOrder: number; products: ProductRead[] }
+  >()
+
+  products.value.forEach((product) => {
+    const category = categories.value.find((item) => item.id === product.category_id)
+    const groupId = product.category_id
+    const existingGroup = groups.get(groupId)
+
+    if (existingGroup) {
+      existingGroup.products.push(product)
+      return
+    }
+
+    groups.set(groupId, {
+      id: groupId,
+      name: category?.name ?? 'Без категории',
+      sortOrder: categoryOrder.get(groupId) ?? Number.MAX_SAFE_INTEGER,
+      products: [product],
+    })
+  })
+
+  return [...groups.values()]
+    .sort((left, right) => {
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder
+      }
+
+      return left.name.localeCompare(right.name, 'ru')
+    })
+    .map((group) => ({
+      ...group,
+      products: [...group.products].sort((left, right) => left.name.localeCompare(right.name, 'ru')),
+    }))
+})
 
 const productImageHint = computed(() => {
   if (productImageFile.value) {
@@ -521,6 +602,11 @@ function fillProductFormFromSelection() {
   fillProductForm(product)
 }
 
+function selectProduct(productId: string) {
+  selectedProductId.value = productId
+  fillProductFormFromSelection()
+}
+
 function parseVariants(): ProductVariantCreate[] | undefined {
   if (!variantsText.value.trim()) return undefined
 
@@ -622,6 +708,7 @@ async function loadAdminData() {
   try {
     await Promise.all([
       loadOrders(),
+      categoriesStore.fetchCategories(),
       productsStore.fetchProducts(),
       siteStore.fetchSiteStatus(),
       siteStore.fetchHealth(),
@@ -974,6 +1061,148 @@ onMounted(() => {
 
 .admin-field--grow {
   flex: 1;
+}
+
+.admin-product-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.admin-product-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-product-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-product-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-product-group__title {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-product-group__count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-product-card {
+  border-radius: 14px;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-product-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.admin-product-card--active {
+  border-color: rgba(127, 46, 67, 0.55);
+  background: rgba(127, 46, 67, 0.18);
+  box-shadow: 0 0 0 1px rgba(127, 46, 67, 0.28);
+}
+
+.admin-product-card__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-product-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+}
+
+.admin-product-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-product-card__top strong {
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.admin-product-card__status {
+  flex-shrink: 0;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-product-card__status--active {
+  background: rgba(63, 176, 108, 0.18);
+  color: #b9f1c8;
+}
+
+.admin-product-card__status--inactive {
+  background: rgba(176, 63, 63, 0.18);
+  color: #ffb1b1;
+}
+
+.admin-product-card__meta,
+.admin-product-card__description {
+  margin: 0;
+}
+
+.admin-product-card__meta {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-product-card__description {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .admin-input,
