@@ -1,6 +1,5 @@
 import type { ProductRead, ProductVariantRead } from '@/types/api'
 
-const FALLBACK_IMAGE = 'https://www.gastronom.ru/recipe/26529/fo-bo-govjazhij-sup-s-lapshoj'
 const PRODUCT_IMAGE_BASE_PATH = '/static/img/products'
 const PRODUCT_IMAGE_THUMBNAIL_BASE_PATH = '/static/img/products thumbnail'
 
@@ -30,7 +29,7 @@ export function getProductVariantById(product: ProductRead, variantId?: string |
 }
 
 function resolveProductImagePath(imageUrl?: string | null, options: ProductImageOptions = {}) {
-  if (!imageUrl) return FALLBACK_IMAGE
+  if (!imageUrl) return ''
 
   if (/^(https?:)?\/\//i.test(imageUrl)) {
     return imageUrl

@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
+import { useCategoriesStore } from '@/stores/categories'
 import { useProductsStore } from '@/stores/products'
 import type { ProductRead } from '@/types/api'
 import { getProductCategoryLabel } from '@/utils/products'
@@ -23,6 +24,7 @@ function matchesQuery(product: ProductRead, query: string) {
 }
 
 export const useCatalogStore = defineStore('catalog', () => {
+  const categoriesStore = useCategoriesStore()
   const productsStore = useProductsStore()
 
   const selectedCategory = ref<string>(ALL_CATEGORY)
@@ -32,26 +34,11 @@ export const useCatalogStore = defineStore('catalog', () => {
   const errorMessage = ref('')
 
   const categories = computed(() => {
-    const categoriesMap = new Map<string, number | null>()
+    const orderedCategories = categoriesStore.categories
+      .filter((category) => category.is_active !== false)
+      .map((category) => category.name)
 
-    productsStore.products.forEach((product) => {
-      categoriesMap.set(getProductCategoryLabel(product), product.category?.sort_order ?? null)
-    })
-
-    const sortedCategories = [...categoriesMap.entries()]
-      .sort((left, right) => {
-        const leftOrder = left[1] ?? Number.MAX_SAFE_INTEGER
-        const rightOrder = right[1] ?? Number.MAX_SAFE_INTEGER
-
-        if (leftOrder !== rightOrder) {
-          return leftOrder - rightOrder
-        }
-
-        return left[0].localeCompare(right[0], 'ru')
-      })
-      .map(([name]) => name)
-
-    return [ALL_CATEGORY, ...sortedCategories]
+    return [ALL_CATEGORY, ...orderedCategories]
   })
 
   const filteredMenuList = computed(() => {
@@ -73,7 +60,10 @@ export const useCatalogStore = defineStore('catalog', () => {
     errorMessage.value = ''
 
     try {
-      const response = await productsStore.fetchProducts()
+      const [response] = await Promise.all([
+        productsStore.fetchProducts(),
+        categoriesStore.fetchCategories(),
+      ])
       isLoaded.value = true
 
       return response

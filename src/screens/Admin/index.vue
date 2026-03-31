@@ -35,6 +35,7 @@
         v-model:variants-text="variantsText"
         v-model:ingredients-text="ingredientsText"
         :grouped-products="groupedProducts"
+        :category-options="categoryOptions"
         :product-mode-options="productModeOptions"
         :selected-product-id="selectedProductId"
         :product-error="productError"
@@ -81,6 +82,7 @@ import AdminSiteTab from './components/AdminSiteTab.vue'
 import AdminToolbar from './components/AdminToolbar.vue'
 import type {
   AdminTab,
+  CategoryOption,
   GroupedProduct,
   OrderFilterOption,
   OrderStatusOption,
@@ -157,6 +159,13 @@ const productModeOptions = [
   { value: 'create', label: 'Новый товар' },
   { value: 'edit', label: 'Редактировать' },
 ] as const satisfies readonly ProductModeOption[]
+
+const categoryOptions = computed<CategoryOption[]>(() =>
+  categories.value.map((category) => ({
+    value: category.id,
+    label: category.name,
+  })),
+)
 
 const sortedOrders = computed(() =>
   [...adminOrders.value].sort(

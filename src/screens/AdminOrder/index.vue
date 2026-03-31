@@ -90,12 +90,22 @@
 
           <div class="admin-order-items">
             <article v-for="item in orderItems" :key="item.id" class="admin-order-item">
-              <img
-                class="admin-order-item__image"
-                :src="item.productImage"
-                :alt="item.productName"
-                loading="lazy"
-              />
+              <div
+                class="admin-order-item__image-shell product-image-shell"
+                :class="{ 'product-image-shell--fallback': !item.productImage }"
+              >
+                <img
+                  v-if="item.productImage"
+                  class="admin-order-item__image"
+                  :src="item.productImage"
+                  :alt="item.productName"
+                  loading="lazy"
+                  @error="handleImageError"
+                />
+                <div class="admin-order-item__image-placeholder product-image-placeholder">
+                  Нет фото
+                </div>
+              </div>
 
               <div class="admin-order-item__content">
                 <div class="admin-order-item__top">
@@ -231,6 +241,14 @@ function paymentLabel(paymentMethod: string) {
       online: 'Онлайн',
     }[paymentMethod] ?? paymentMethod
   )
+}
+
+function handleImageError(event: Event) {
+  const image = event.currentTarget
+
+  if (!(image instanceof HTMLImageElement)) return
+
+  image.parentElement?.classList.add('product-image-shell--fallback')
 }
 
 onMounted(() => {
@@ -466,12 +484,23 @@ onMounted(() => {
   align-items: start;
 }
 
-.admin-order-item__image {
+.admin-order-item__image-shell {
   width: 72px;
   height: 72px;
   border-radius: 12px;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-order-item__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.admin-order-item__image-placeholder {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .admin-order-item__content {
@@ -530,7 +559,7 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .admin-order-item__image {
+  .admin-order-item__image-shell {
     width: 100%;
     height: 140px;
   }

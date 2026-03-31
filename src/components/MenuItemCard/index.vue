@@ -1,11 +1,23 @@
 <template>
   <div class="menu-item-card">
-    <div @click="goToItem" class="menu-item-card__image-container">
+    <div
+      @click="goToItem"
+      class="menu-item-card__image-container product-image-shell"
+      :class="{ 'product-image-shell--fallback': !productImage }"
+    >
       <span v-if="hasMultipleVariants && variantsLabel" class="menu-item-card__variants-badge">
         {{ variantsLabel }}
       </span>
 
-      <img class="menu-item-card__image" :src="productImage" :alt="menuItem.name" loading="lazy" />
+      <img
+        v-if="productImage"
+        class="menu-item-card__image"
+        :src="productImage"
+        :alt="menuItem.name"
+        loading="lazy"
+        @error="handleImageError"
+      />
+      <div class="menu-item-card__image-placeholder product-image-placeholder">Нет фото</div>
     </div>
 
     <div class="menu-item-card__info">
@@ -109,6 +121,14 @@ function goToItem() {
     },
   })
 }
+
+function handleImageError(event: Event) {
+  const image = event.currentTarget
+
+  if (!(image instanceof HTMLImageElement)) return
+
+  image.parentElement?.classList.add('product-image-shell--fallback')
+}
 </script>
 
 <style lang="scss">
@@ -146,7 +166,7 @@ function goToItem() {
   overflow: hidden;
   cursor: pointer;
   margin-bottom: 12px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .menu-item-card__variants-badge {
@@ -166,8 +186,13 @@ function goToItem() {
 .menu-item-card__image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   transition: transform 0.18s ease;
+}
+
+.menu-item-card__image-placeholder {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .menu-item-card__info {

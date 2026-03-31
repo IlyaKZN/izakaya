@@ -26,3 +26,4 @@ export type ProductFormState = {
 export type OrderFilterOption = AdminOption
 export type OrderStatusOption = AdminOption<OrderStatusEnum>
 export type ProductModeOption = AdminOption<ProductMode>
+export type CategoryOption = AdminOption

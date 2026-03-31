@@ -18,7 +18,19 @@
           <span class="menu-item-screen__back-link-text"> Вернуться назад </span>
         </button>
 
-        <img class="menu-item-screen__preview" :src="productImage" :alt="item.name" />
+        <div
+          class="menu-item-screen__preview-shell product-image-shell"
+          :class="{ 'product-image-shell--fallback': !productImage }"
+        >
+          <img
+            v-if="productImage"
+            class="menu-item-screen__preview"
+            :src="productImage"
+            :alt="item.name"
+            @error="handleImageError"
+          />
+          <div class="menu-item-screen__preview-placeholder product-image-placeholder">Нет фото</div>
+        </div>
 
         <div v-if="ingredients.length" class="menu-item-screen__ingredients">
           <template v-for="(ingredient, index) in ingredients" :key="ingredient">
@@ -191,6 +203,14 @@ function goToMain() {
     name: 'main',
   })
 }
+
+function handleImageError(event: Event) {
+  const image = event.currentTarget
+
+  if (!(image instanceof HTMLImageElement)) return
+
+  image.parentElement?.classList.add('product-image-shell--fallback')
+}
 </script>
 
 <style lang="scss">
@@ -211,22 +231,31 @@ function goToMain() {
   gap: 8px;
 }
 
-.menu-item-screen__preview {
+.menu-item-screen__preview-shell {
   width: min(460px, 100%);
   aspect-ratio: 2/1.45;
   border-radius: 18px;
-  object-fit: cover;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
   box-shadow: var(--shadow-card);
+}
+
+.menu-item-screen__preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.menu-item-screen__preview-placeholder {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .menu-item-screen__content {
   display: grid;
   grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
   gap: 28px;
-  padding: 22px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--surface-border);
-  background: var(--surface-1);
+  padding: 0;
 }
 
 .menu-item-screen__left-column {
@@ -381,7 +410,7 @@ function goToMain() {
 @media (max-width: 900px) {
   .menu-item-screen__content {
     grid-template-columns: 1fr;
-    padding: 14px;
+    padding: 0;
   }
 
   .menu-item-screen__info {
@@ -396,11 +425,14 @@ function goToMain() {
 
 @media (max-width: 640px) {
   .menu-item-screen__content {
-    padding: 12px;
     gap: 16px;
   }
 
   .menu-item-screen__preview {
+    border-radius: 14px;
+  }
+
+  .menu-item-screen__preview-shell {
     width: 100%;
     border-radius: 14px;
   }

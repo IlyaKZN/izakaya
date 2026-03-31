@@ -36,12 +36,22 @@
                 :class="{ 'admin-product-card--active': selectedProductId === product.id }"
                 @click="emit('selectProduct', product.id)"
               >
-                <img
-                  class="admin-product-card__image"
-                  :src="getProductImage(product, { thumbnail: true })"
-                  :alt="product.name"
-                  loading="lazy"
-                />
+                <div
+                  class="admin-product-card__image-shell product-image-shell"
+                  :class="{ 'product-image-shell--fallback': !getProductImage(product, { thumbnail: true }) }"
+                >
+                  <img
+                    v-if="getProductImage(product, { thumbnail: true })"
+                    class="admin-product-card__image"
+                    :src="getProductImage(product, { thumbnail: true })"
+                    :alt="product.name"
+                    loading="lazy"
+                    @error="handleImageError"
+                  />
+                  <div class="admin-product-card__image-placeholder product-image-placeholder">
+                    Нет фото
+                  </div>
+                </div>
 
                 <div class="admin-product-card__body">
                   <div class="admin-product-card__top">
@@ -80,8 +90,12 @@
           </label>
 
           <label class="admin-field admin-field--grow">
-            <span>ID категории</span>
-            <input v-model.trim="productForm.category_id" class="admin-input" required />
+            <span>Категория</span>
+            <BaseSelect
+              v-model="productForm.category_id"
+              :options="categoryOptions"
+              placeholder="Выберите категорию"
+            />
           </label>
 
           <label class="admin-field admin-field--grow">
@@ -166,6 +180,7 @@ import { computed } from 'vue'
 import BaseSelect from '@/components/BaseSelect'
 import { getProductImage } from '@/utils/products'
 import type {
+  CategoryOption,
   GroupedProduct,
   ProductFormState,
   ProductMode,
@@ -174,6 +189,7 @@ import type {
 
 const props = defineProps<{
   groupedProducts: GroupedProduct[]
+  categoryOptions: readonly CategoryOption[]
   productMode: ProductMode
   productModeOptions: readonly ProductModeOption[]
   selectedProductId: string
@@ -216,5 +232,13 @@ const ingredientsTextModel = computed({
 
 function formatPrice(value: string) {
   return `${Number(value).toFixed(0)} ₽`
+}
+
+function handleImageError(event: Event) {
+  const image = event.currentTarget
+
+  if (!(image instanceof HTMLImageElement)) return
+
+  image.parentElement?.classList.add('product-image-shell--fallback')
 }
 </script>

@@ -98,6 +98,31 @@ button {
   font: inherit;
 }
 
+.product-image-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image-shell--fallback .product-image-placeholder {
+  display: flex;
+}
+
+.product-image-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

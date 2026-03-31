@@ -20,7 +20,7 @@
     </button>
 
     <div class="embla">
-      <div class="embla__viewport" ref="emblaRef">
+      <div class="embla__viewport" ref="viewportRef" @scroll="syncOverflowState">
         <div class="embla__container">
           <div v-for="item in menuList" :key="item.id" class="embla__slide">
             <MenuItemCard :menu-item="item" />
@@ -60,7 +60,7 @@ const { menuList, title } = defineProps<{
 }>()
 
 const router = useRouter()
-const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })
+const [viewportRef, emblaApi] = useEmblaCarousel({ loop: false, dragFree: true })
 const hasOverflow = ref(false)
 
 const goToPrev = () => emblaApi.value?.scrollPrev()

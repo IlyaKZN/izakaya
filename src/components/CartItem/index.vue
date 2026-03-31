@@ -1,6 +1,19 @@
 <template>
   <div class="cart-item">
-    <img class="cart-item__image" :src="productImage" :alt="item.menuItem.name" loading="lazy" />
+    <div
+      class="cart-item__image-shell product-image-shell"
+      :class="{ 'product-image-shell--fallback': !productImage }"
+    >
+      <img
+        v-if="productImage"
+        class="cart-item__image"
+        :src="productImage"
+        :alt="item.menuItem.name"
+        loading="lazy"
+        @error="handleImageError"
+      />
+      <div class="cart-item__image-placeholder product-image-placeholder">Нет фото</div>
+    </div>
 
     <div class="cart-item__info">
       <span class="cart-item__name">
@@ -58,6 +71,14 @@ const totalPrice = computed(() => getProductPrice(item.menuItem, item.selectedVa
 const variantLabel = computed(() =>
   item.selectedVariant ? formatVariant(item.selectedVariant) : null,
 )
+
+function handleImageError(event: Event) {
+  const image = event.currentTarget
+
+  if (!(image instanceof HTMLImageElement)) return
+
+  image.parentElement?.classList.add('product-image-shell--fallback')
+}
 </script>
 
 <style lang="scss">
@@ -69,11 +90,23 @@ const variantLabel = computed(() =>
   color: white;
 }
 
-.cart-item__image {
+.cart-item__image-shell {
   height: 90px;
   aspect-ratio: 2/1.5;
   border-radius: 10px;
-  object-fit: cover;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cart-item__image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.cart-item__image-placeholder {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .cart-item__info {
@@ -131,7 +164,7 @@ const variantLabel = computed(() =>
     gap: 10px;
   }
 
-  .cart-item__image {
+  .cart-item__image-shell {
     width: 84px;
     height: 84px;
   }
