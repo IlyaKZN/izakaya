@@ -464,7 +464,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  background: var(--accent-button-bg);
 }
 
 @media (max-width: 960px) {

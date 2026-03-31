@@ -318,13 +318,13 @@ watch(
 }
 
 .auth-popup__submit {
-  background: linear-gradient(180deg, #8a6170, #724c59);
+  background: var(--accent-button-bg);
   font-weight: 600;
 }
 
 .auth-popup__secondary {
   margin-top: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--accent-button-bg);
 }
 
 .auth-popup__submit:disabled,

@@ -318,8 +318,8 @@ function goToMain() {
 }
 
 .menu-item-screen__variant-button--active {
-  border-color: rgba(127, 46, 67, 0.7);
-  background: rgba(127, 46, 67, 0.24);
+  border-color: var(--accent-soft-border);
+  background: var(--accent-soft);
 }
 
 .menu-item-screen__price {
@@ -342,7 +342,7 @@ function goToMain() {
   padding: 0 18px;
   border-radius: 10px;
   color: #fff;
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  background: var(--accent-button-bg);
 }
 
 .menu-item-screen__separator {
@@ -359,8 +359,8 @@ function goToMain() {
 .menu-item-screen__change-count-button {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: var(--accent-button-bg);
   display: flex;
   align-items: center;
   justify-content: center;

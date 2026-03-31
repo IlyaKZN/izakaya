@@ -134,10 +134,10 @@ const handleLogout = async () => {
 <style lang="scss">
 .header {
   width: 100%;
-  border-bottom: 1px solid rgba(228, 186, 132, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background:
-    linear-gradient(180deg, rgba(13, 10, 8, 0.98), rgba(10, 8, 7, 0.95)),
-    rgba(18, 14, 17, 0.97);
+    linear-gradient(180deg, rgba(18, 14, 17, 0.92), rgba(11, 11, 12, 0.88)),
+    rgba(18, 14, 17, 0.94);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(18px);
 }
@@ -154,6 +154,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 18px;
   padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .header__brand-group,
@@ -194,12 +195,14 @@ const handleLogout = async () => {
   display: grid;
   place-items: center;
   padding: 8px;
-  background: radial-gradient(circle at 30% 30%, #f0cb98, #d0a36b 58%, #835d33 100%);
-  color: #21150c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(127, 46, 67, 0.95), rgba(84, 29, 45, 0.96) 62%, rgba(28, 17, 22, 0.98) 100%);
+  color: #f5d7df;
   text-transform: lowercase;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    0 12px 24px rgba(0, 0, 0, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 .header__brand-badge-top,
@@ -230,7 +233,7 @@ const handleLogout = async () => {
 }
 
 .header__brand-subtitle {
-  color: rgba(241, 224, 201, 0.7);
+  color: rgba(200, 188, 193, 0.72);
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -243,14 +246,14 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(228, 186, 132, 0.1);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
   padding: 0 12px 0 14px;
 }
 
 .header__search-icon {
-  color: rgba(241, 224, 201, 0.55);
+  color: rgba(200, 188, 193, 0.6);
 }
 
 .header__search input {
@@ -264,20 +267,20 @@ const handleLogout = async () => {
 }
 
 .header__search input::placeholder {
-  color: rgba(241, 224, 201, 0.42);
+  color: rgba(200, 188, 193, 0.44);
 }
 
 .header__search-action {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #22160e;
-  background: linear-gradient(180deg, #efc892, #d8aa6f);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #fff;
+  background: var(--accent-button-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .header__search-action .material-symbols {
@@ -293,16 +296,16 @@ const handleLogout = async () => {
 .header__meta-item {
   min-height: 52px;
   padding: 0 4px;
-  border-radius: 16px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #f3e4d0;
+  color: #d9d6d8;
 }
 
 .header__meta-item > .material-symbols {
   font-size: 20px;
-  color: #deb47f;
+  color: rgba(239, 127, 154, 0.86);
 }
 
 .header__meta-copy {
@@ -312,7 +315,7 @@ const handleLogout = async () => {
 }
 
 .header__meta-label {
-  color: rgba(241, 224, 201, 0.6);
+  color: rgba(200, 188, 193, 0.58);
   font-size: 11px;
   line-height: 1;
 }
@@ -336,14 +339,14 @@ const handleLogout = async () => {
 .header__profile-link {
   min-height: 48px;
   padding: 0 16px;
-  border-radius: 16px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   gap: 8px;
   color: #fff;
   white-space: nowrap;
-  border: 1px solid rgba(228, 186, 132, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.045);
   transition:
     border-color 0.18s ease,
     background-color 0.18s ease,
@@ -355,15 +358,15 @@ const handleLogout = async () => {
 .header__logout-button:hover,
 .header__profile-link:hover {
   transform: translateY(-1px);
-  border-color: rgba(228, 186, 132, 0.18);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(127, 46, 67, 0.24);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .router-link-active.header__nav-link,
 .router-link-active.header__profile-link {
-  color: #21150c;
-  border-color: rgba(228, 186, 132, 0.22);
-  background: linear-gradient(180deg, #efc892, #d8aa6f);
+  color: #fff;
+  border-color: var(--accent-soft-border);
+  background: var(--accent-button-bg);
 }
 
 .header__auth {
@@ -373,9 +376,14 @@ const handleLogout = async () => {
 }
 
 .header__auth-button {
-  color: #21150c;
-  background: linear-gradient(180deg, #efc892, #d8aa6f);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #fff;
+  background: var(--accent-button-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.header__logout-button {
+  background: var(--accent-button-bg);
+  border-color: var(--accent-soft-border);
 }
 
 .header__profile {
@@ -384,8 +392,8 @@ const handleLogout = async () => {
   gap: 8px;
   padding: 6px;
   padding-left: 8px;
-  border-radius: 18px;
-  border: 1px solid rgba(228, 186, 132, 0.08);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -404,7 +412,7 @@ const handleLogout = async () => {
 }
 
 .header__profile-phone {
-  color: rgba(241, 224, 201, 0.62);
+  color: rgba(200, 188, 193, 0.62);
   font-size: 12px;
 }
 
@@ -427,7 +435,7 @@ const handleLogout = async () => {
   }
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1024px) {
   .header__bar {
     flex-wrap: wrap;
   }
@@ -442,7 +450,7 @@ const handleLogout = async () => {
   }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1180px) {
   .header__meta {
     display: none;
   }
@@ -536,7 +544,7 @@ const handleLogout = async () => {
   .header__search-action {
     width: 34px;
     height: 34px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .header__actions {

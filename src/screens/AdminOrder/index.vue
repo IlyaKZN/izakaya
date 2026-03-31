@@ -32,7 +32,7 @@
       </section>
 
       <div class="admin-order-screen__grid">
-        <section class="admin-order-card">
+        <section class="admin-order-card admin-order-card--compact">
           <h2 class="admin-order-card__title">Основная информация</h2>
 
           <dl class="admin-order-card__meta">
@@ -85,7 +85,7 @@
           </div>
         </section>
 
-        <section class="admin-order-card">
+        <section class="admin-order-card admin-order-card--items">
           <h2 class="admin-order-card__title">Состав заказа</h2>
 
           <div class="admin-order-items">
@@ -243,11 +243,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 28px;
-  font-family:
-    'Segoe UI',
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+  font-family: var(--font-sans);
   letter-spacing: -0.01em;
   font-feature-settings:
     'cv02' 1,
@@ -354,11 +350,19 @@ onMounted(() => {
 
 .admin-order-screen__grid {
   display: grid;
-  grid-template-columns: 420px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   gap: 24px;
 }
 
 .admin-order-card {
+  padding: 28px;
+}
+
+.admin-order-card--compact {
+  padding: 14px;
+}
+
+.admin-order-card--items {
   padding: 28px;
 }
 
@@ -375,6 +379,17 @@ onMounted(() => {
   grid-template-columns: 1fr 1fr;
   gap: 24px 18px;
   margin: 0 0 24px;
+}
+
+.admin-order-card--compact .admin-order-card__title {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.admin-order-card--compact .admin-order-card__meta {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .admin-order-card__meta dt,
@@ -396,14 +411,34 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
+.admin-order-card--compact .admin-order-card__meta dt {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.admin-order-card--compact .admin-order-card__meta dd {
+  font-size: 13px;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
 .admin-order-card__note {
   padding: 18px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
 }
 
+.admin-order-card--compact .admin-order-card__note {
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
 .admin-order-card__note + .admin-order-card__note {
   margin-top: 14px;
+}
+
+.admin-order-card--compact .admin-order-card__note + .admin-order-card__note {
+  margin-top: 10px;
 }
 
 .admin-order-card__note p {
@@ -417,7 +452,7 @@ onMounted(() => {
 .admin-order-items {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .admin-order-item {
@@ -474,7 +509,7 @@ onMounted(() => {
   letter-spacing: 0.04em;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 760px) {
   .admin-order-screen__grid {
     grid-template-columns: 1fr;
   }

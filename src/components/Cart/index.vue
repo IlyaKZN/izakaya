@@ -358,6 +358,14 @@ watch(
   border: 1px solid var(--surface-border);
   color: var(--text-secondary);
   min-width: 0;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
 
   span:last-child {
     min-width: 0;
@@ -369,7 +377,7 @@ watch(
 
 .cart {
   width: 100%;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--surface-border);
   padding: 16px;
   border-radius: var(--radius-lg);
@@ -400,18 +408,22 @@ watch(
   grid-template-columns: 1fr 1fr;
   padding: 4px;
   gap: 4px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .cart__mode-button {
-  height: 36px;
-  border-radius: 10px;
+  height: 40px;
+  border-radius: 14px;
   color: var(--text-secondary);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .cart__mode-button--active {
-  background: rgba(127, 46, 67, 0.35);
+  background: var(--accent-soft);
   color: #fff;
 }
 
@@ -422,6 +434,7 @@ watch(
   padding: 12px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .cart__promo {
@@ -448,8 +461,8 @@ watch(
 }
 
 .cart__field-input {
-  height: 38px;
-  border-radius: 10px;
+  height: 42px;
+  border-radius: 14px;
   border: 1px solid var(--surface-border);
   background: rgba(255, 255, 255, 0.03);
   color: #fff;
@@ -465,7 +478,7 @@ watch(
 .cart__textarea {
   min-height: 82px;
   resize: vertical;
-  border-radius: 10px;
+  border-radius: 14px;
   border: 1px solid var(--surface-border);
   background: rgba(255, 255, 255, 0.03);
   color: #fff;
@@ -474,9 +487,11 @@ watch(
 }
 
 .cart__promo-button {
-  padding: 0 12px;
-  border-radius: 10px;
-  background: rgba(127, 46, 67, 0.35);
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  background: var(--accent-button-bg);
 }
 
 .cart__bonus-row {
@@ -512,9 +527,9 @@ watch(
 
 .cart__notice {
   padding: 10px;
-  border-radius: 10px;
-  background: rgba(127, 46, 67, 0.18);
-  border: 1px solid rgba(127, 46, 67, 0.35);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-soft-border);
   color: #f0dde3;
   font-size: 13px;
 }
@@ -532,10 +547,11 @@ watch(
 .cart__checkout {
   width: 100%;
   height: 46px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  border-radius: 16px;
+  background: var(--accent-button-bg);
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 10px 22px rgba(103, 34, 53, 0.18);
 }
 
 .cart__checkout:disabled {

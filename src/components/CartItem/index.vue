@@ -117,11 +117,12 @@ const variantLabel = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  color: #fff;
+  background: var(--accent-button-bg);
+  border-radius: 10px;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.18);
+    filter: brightness(1.08);
   }
 }
 

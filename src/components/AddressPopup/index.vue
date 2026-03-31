@@ -525,7 +525,7 @@ onBeforeUnmount(() => {
 }
 
 .address-popup__tab--active {
-  background: #8a6170;
+  background: var(--accent-button-bg);
   color: #fff;
 }
 
@@ -555,8 +555,8 @@ onBeforeUnmount(() => {
   height: 50px;
   padding: 0 16px;
   border-radius: 12px;
-  background: rgba(138, 97, 112, 0.2);
-  border: 1px solid rgba(138, 97, 112, 0.45);
+  background: var(--accent-button-bg);
+  border: 1px solid var(--accent-soft-border);
   color: #fff;
 }
 
@@ -612,7 +612,7 @@ onBeforeUnmount(() => {
   width: 22px;
   height: 22px;
   margin: 0;
-  accent-color: #8a6170;
+  accent-color: var(--accent);
 }
 
 .address-popup__textarea {
@@ -629,7 +629,7 @@ onBeforeUnmount(() => {
   height: 52px;
   border-radius: 12px;
   color: #f5f1f2;
-  background: linear-gradient(180deg, #8a6170, #724c59);
+  background: var(--accent-button-bg);
   font-size: 22px;
   font-weight: 600;
 }

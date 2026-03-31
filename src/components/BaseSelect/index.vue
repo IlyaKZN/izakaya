@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
 }
 
 .base-select__option--active {
-  background: rgba(127, 46, 67, 0.28);
+  background: var(--accent-soft-strong);
 }
 
 .base-select--disabled .base-select__trigger {

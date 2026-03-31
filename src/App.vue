@@ -1,6 +1,24 @@
-﻿<template>
+<template>
   <div class="app">
-    <TheHeader class="app_header" />
+    <div
+      class="app_header-shell"
+      :class="{ 'app_header-shell--collapsed': isAdminRoute && !isAdminHeaderVisible }"
+    >
+      <TheHeader class="app_header" />
+    </div>
+
+    <button
+      v-if="isAdminRoute"
+      type="button"
+      class="app_header-toggle"
+      :class="{ 'app_header-toggle--active': isAdminHeaderVisible }"
+      @click="isAdminHeaderVisible = !isAdminHeaderVisible"
+    >
+      <span class="material-symbols">
+        {{ isAdminHeaderVisible ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+      </span>
+      <span>{{ isAdminHeaderVisible ? 'Скрыть шапку' : 'Показать шапку' }}</span>
+    </button>
 
     <div class="router-container" :class="{ 'router-container--wide': isWideLayout }">
       <aside v-if="!isWideLayout" class="app_categories-list-wrap">
@@ -23,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import TheHeader from './components/TheHeader'
@@ -37,6 +55,8 @@ const authStore = useAuthStore()
 const usersStore = useUsersStore()
 const { isAuthenticated } = storeToRefs(authStore)
 const isWideLayout = computed(() => Boolean(route.meta.wideLayout))
+const isAdminRoute = computed(() => Boolean(route.meta.requiresAdmin))
+const isAdminHeaderVisible = ref(false)
 
 const syncProfile = async () => {
   if (!isAuthenticated.value) {
@@ -59,6 +79,14 @@ onMounted(() => {
 watch(isAuthenticated, () => {
   void syncProfile()
 })
+
+watch(
+  () => route.fullPath,
+  () => {
+    isAdminHeaderVisible.value = !isAdminRoute.value
+  },
+  { immediate: true },
+)
 </script>
 
 <style lang="scss">
@@ -68,6 +96,21 @@ watch(isAuthenticated, () => {
   flex-direction: column;
 }
 
+.app_header-shell {
+  max-height: 240px;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-height 0.24s ease,
+    opacity 0.2s ease;
+}
+
+.app_header-shell--collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .app_header {
   position: sticky;
   top: 0;
@@ -75,13 +118,34 @@ watch(isAuthenticated, () => {
   z-index: 30;
 }
 
+.app_header-toggle {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 45;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  border: 1px solid rgba(228, 186, 132, 0.12);
+  background: rgba(18, 14, 17, 0.9);
+  backdrop-filter: blur(12px);
+}
+
+.app_header-toggle--active {
+  background: var(--accent-button-bg);
+}
+
 .router-container {
   width: 100%;
-  max-width: 1700px;
+  max-width: 1840px;
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr) 340px;
+  grid-template-columns: 220px minmax(0, 1.35fr) 320px;
   align-items: start;
   gap: 24px;
 }
@@ -129,7 +193,13 @@ watch(isAuthenticated, () => {
 
 @media (max-width: 1280px) {
   .router-container {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .router-container--wide {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+    gap: 16px;
   }
 
   .app_cart-wrap {
@@ -145,6 +215,10 @@ watch(isAuthenticated, () => {
     gap: 16px;
   }
 
+  .router-container--wide {
+    grid-template-columns: 1fr;
+  }
+
   .app_categories-list-wrap,
   .app_cart-wrap {
     position: static;
@@ -152,6 +226,18 @@ watch(isAuthenticated, () => {
 }
 
 @media (max-width: 640px) {
+  .app_header-toggle {
+    top: 10px;
+    right: 12px;
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .app_header-toggle span:last-child {
+    display: none;
+  }
+
   .router-container {
     padding: 12px;
     padding-bottom: calc(18px + env(safe-area-inset-bottom));
