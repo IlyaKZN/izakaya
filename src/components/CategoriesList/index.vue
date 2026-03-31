@@ -8,7 +8,7 @@
       type="button"
       class="categories-list__item"
       :class="{ 'categories-list__item--active': selectedCategory === category }"
-      @click="selectedCategory = category"
+      @click="handleCategoryClick(category)"
     >
       {{ category }}
     </button>
@@ -18,18 +18,36 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useCatalogStore } from '@/stores/catalog'
+import { useRouter } from 'vue-router'
+import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
 
 defineOptions({
   name: 'CategoriesList',
 })
 
 const catalogStore = useCatalogStore()
+const router = useRouter()
 const { categories, selectedCategory } = storeToRefs(catalogStore)
 
 onMounted(() => {
   void catalogStore.loadCatalog().catch(() => undefined)
 })
+
+function handleCategoryClick(category: string) {
+  selectedCategory.value = category
+
+  if (category === ALL_CATEGORY) {
+    router.push({ name: 'main' })
+    return
+  }
+
+  router.push({
+    name: 'category',
+    params: {
+      category,
+    },
+  })
+}
 </script>
 
 <style lang="scss">

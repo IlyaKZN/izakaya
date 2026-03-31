@@ -43,6 +43,7 @@ const { filteredMenuList, selectedCategory, categories, isLoading, errorMessage 
   storeToRefs(catalogStore)
 
 onMounted(() => {
+  selectedCategory.value = ALL_CATEGORY
   void catalogStore.loadCatalog().catch(() => undefined)
 })
 

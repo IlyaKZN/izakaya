@@ -5,7 +5,7 @@
       <span>Доступ к админке есть только у администратора.</span>
     </div>
 
-    <div v-else-if="isLoading" class="admin-screen__state">
+    <div v-else-if="isInitialLoading" class="admin-screen__state">
       <span class="material-symbols">progress_activity</span>
       <span>Загружаем данные админки</span>
     </div>
@@ -14,7 +14,6 @@
       <AdminToolbar
         v-model:active-tab="activeTab"
         :orders-count="sortedOrders.length"
-        @refresh="loadAdminData"
       />
 
       <AdminOrdersTab
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/admin'
@@ -110,6 +109,7 @@ const { siteStatus, health } = storeToRefs(siteStore)
 const activeTab = ref<AdminTab>('orders')
 const isAdmin = computed(() => role.value === 'admin')
 const isLoading = ref(false)
+const hasLoadedOnce = ref(false)
 const isTogglingSite = ref(false)
 const isSubmittingProduct = ref(false)
 const updatingOrderId = ref<string | null>(null)
@@ -121,6 +121,7 @@ const siteActionMessage = ref('')
 const productMode = ref<ProductMode>('create')
 const selectedProductId = ref('')
 const productImageInputKey = ref(0)
+let adminPollingId: ReturnType<typeof setInterval> | null = null
 
 const productForm = reactive<ProductFormState>({
   name: '',
@@ -210,6 +211,8 @@ const productImageHint = computed(() => {
 
   return ''
 })
+
+const isInitialLoading = computed(() => isLoading.value && !hasLoadedOnce.value)
 
 const siteStatusLabel = computed(() => {
   const status = siteStatus.value as { is_active?: boolean } | null
@@ -402,7 +405,9 @@ async function applyOrdersFilter(nextFilter: string) {
 async function loadAdminData() {
   if (!isAdmin.value) return
 
-  isLoading.value = true
+  if (!hasLoadedOnce.value) {
+    isLoading.value = true
+  }
   ordersError.value = ''
 
   try {
@@ -414,6 +419,7 @@ async function loadAdminData() {
       siteStore.fetchHealth(),
     ])
   } finally {
+    hasLoadedOnce.value = true
     isLoading.value = false
   }
 }
@@ -501,6 +507,16 @@ function openOrder(orderId: string) {
 
 onMounted(() => {
   void loadAdminData()
+  adminPollingId = setInterval(() => {
+    void loadAdminData()
+  }, 5000)
+})
+
+onBeforeUnmount(() => {
+  if (adminPollingId) {
+    clearInterval(adminPollingId)
+    adminPollingId = null
+  }
 })
 </script>
 

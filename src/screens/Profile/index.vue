@@ -6,15 +6,14 @@
       <RouterLink class="profile-screen__link" :to="{ name: 'main' }">Вернуться в меню</RouterLink>
     </div>
 
-    <div v-else-if="isLoading" class="profile-screen__state">
+    <div v-else-if="isInitialLoading" class="profile-screen__state">
       <span class="material-symbols">progress_activity</span>
       <span>Загружаем профиль и заказы</span>
     </div>
 
-    <div v-else-if="errorMessage" class="profile-screen__state">
+    <div v-else-if="showInitialError" class="profile-screen__state">
       <span class="material-symbols">wifi_off</span>
       <span>{{ errorMessage }}</span>
-      <button type="button" class="profile-screen__retry" @click="loadProfilePage">Повторить</button>
     </div>
 
     <template v-else>
@@ -80,10 +79,6 @@
             <p class="profile-screen__eyebrow">История</p>
             <h2 class="profile-orders__title">Мои заказы</h2>
           </div>
-
-          <button type="button" class="profile-screen__retry" @click="loadProfilePage">
-            Обновить
-          </button>
         </div>
 
         <div v-if="!myOrders.length" class="profile-card__empty">
@@ -131,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -152,7 +147,9 @@ const { profile } = storeToRefs(usersStore)
 const { myOrders } = storeToRefs(ordersStore)
 
 const isLoading = ref(false)
+const hasLoadedOnce = ref(false)
 const errorMessage = ref('')
+let profilePollingId: ReturnType<typeof setInterval> | null = null
 
 const profileName = computed(() => profile.value?.name || 'Гость')
 const registeredAtLabel = computed(() =>
@@ -180,6 +177,8 @@ const activeOrdersCount = computed(
   () =>
     myOrders.value.filter((order) => ['new', 'cooking', 'delivering'].includes(order.status)).length,
 )
+const isInitialLoading = computed(() => isLoading.value && !hasLoadedOnce.value)
+const showInitialError = computed(() => Boolean(errorMessage.value) && !hasLoadedOnce.value)
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('ru-RU', {
@@ -211,7 +210,9 @@ const paymentLabel = (paymentMethod: string) =>
 const loadProfilePage = async () => {
   if (!isAuthenticated.value) return
 
-  isLoading.value = true
+  if (!hasLoadedOnce.value) {
+    isLoading.value = true
+  }
   errorMessage.value = ''
 
   try {
@@ -220,12 +221,23 @@ const loadProfilePage = async () => {
     errorMessage.value =
       error instanceof Error ? error.message : 'Не удалось загрузить профиль и историю заказов.'
   } finally {
+    hasLoadedOnce.value = true
     isLoading.value = false
   }
 }
 
 onMounted(() => {
   void loadProfilePage()
+  profilePollingId = setInterval(() => {
+    void loadProfilePage()
+  }, 5000)
+})
+
+onBeforeUnmount(() => {
+  if (profilePollingId) {
+    clearInterval(profilePollingId)
+    profilePollingId = null
+  }
 })
 </script>
 
@@ -455,7 +467,6 @@ onMounted(() => {
   line-height: 1.45;
 }
 
-.profile-screen__retry,
 .profile-screen__link {
   height: 42px;
   padding: 0 14px;
@@ -529,7 +540,6 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .profile-screen__retry,
   .profile-screen__link {
     width: 100%;
   }

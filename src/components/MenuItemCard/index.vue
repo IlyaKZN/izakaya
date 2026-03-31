@@ -123,9 +123,9 @@ function goToItem() {
   border: 1px solid var(--surface-border);
   border-radius: 16px;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    border-color 0.12s ease;
 
   &:hover {
     transform: translateY(-2px);
@@ -167,7 +167,7 @@ function goToItem() {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease;
+  transition: transform 0.18s ease;
 }
 
 .menu-item-card__info {
@@ -238,9 +238,9 @@ function goToItem() {
   box-shadow: none;
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    filter 0.15s ease;
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    filter 0.1s ease;
 
   &:hover {
     transform: translateY(-1px);

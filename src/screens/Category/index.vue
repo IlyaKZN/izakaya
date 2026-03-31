@@ -18,7 +18,6 @@
         </button>
 
         <div class="category-screen__hero-copy">
-          <p class="category-screen__eyebrow">Категория</p>
           <div class="category-screen__hero-main">
             <h1 class="category-screen__title">{{ categoryName }}</h1>
             <p class="category-screen__subtitle">
@@ -122,7 +121,6 @@ watch(selectedCategory, (nextCategory) => {
   gap: 16px;
 }
 
-.category-screen__hero,
 .category-screen__state {
   border-radius: var(--radius-lg);
   border: 1px solid var(--surface-border);
@@ -130,7 +128,7 @@ watch(selectedCategory, (nextCategory) => {
 }
 
 .category-screen__hero {
-  padding: 14px 16px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -159,14 +157,6 @@ watch(selectedCategory, (nextCategory) => {
   align-items: center;
   gap: 8px;
   color: #fff;
-}
-
-.category-screen__eyebrow {
-  margin: 0 0 4px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .category-screen__title {
@@ -207,7 +197,7 @@ watch(selectedCategory, (nextCategory) => {
   .category-screen__hero {
     flex-direction: column;
     align-items: flex-start;
-    padding: 12px 14px;
+    padding: 0;
   }
 
   .category-screen__hero-main {

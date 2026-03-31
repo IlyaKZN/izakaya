@@ -13,7 +13,7 @@ defineOptions({
 <style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.09s ease;
 }
 
 .fade-enter-from,

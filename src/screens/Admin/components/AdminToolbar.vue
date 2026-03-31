@@ -29,10 +29,6 @@
         <span>Приём заказов</span>
       </button>
     </div>
-
-    <button type="button" class="admin-button admin-button--ghost" @click="emit('refresh')">
-      Обновить данные
-    </button>
   </div>
 </template>
 
@@ -46,6 +42,5 @@ defineProps<{
 
 const emit = defineEmits<{
   'update:activeTab': [tab: AdminTab]
-  refresh: []
 }>()
 </script>

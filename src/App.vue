@@ -101,8 +101,8 @@ watch(
   opacity: 1;
   overflow: hidden;
   transition:
-    max-height 0.24s ease,
-    opacity 0.2s ease;
+    max-height 0.16s ease,
+    opacity 0.14s ease;
 }
 
 .app_header-shell--collapsed {
@@ -172,9 +172,9 @@ watch(
 .page-slide-enter-active,
 .page-slide-leave-active {
   transition:
-    opacity 0.28s ease,
-    transform 0.28s ease,
-    filter 0.28s ease;
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    filter 0.16s ease;
   transform-origin: center top;
   will-change: opacity, transform, filter;
 }

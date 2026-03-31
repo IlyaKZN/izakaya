@@ -348,9 +348,9 @@ const handleLogout = async () => {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.045);
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    transform 0.18s ease;
+    border-color 0.1s ease,
+    background-color 0.1s ease,
+    transform 0.1s ease;
 }
 
 .header__nav-link:hover,

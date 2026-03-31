@@ -2,11 +2,8 @@
   <section class="category-preview-list">
     <div class="category-preview-list__header">
       <button type="button" class="category-preview-list__title" @click="goToCategory">
-        {{ title }}
-      </button>
-
-      <button type="button" class="category-preview-list__link" @click="goToCategory">
-        Смотреть все
+        <span>{{ title }}</span>
+        <span class="material-symbols category-preview-list__title-arrow">arrow_forward_ios</span>
       </button>
     </div>
 
@@ -123,25 +120,35 @@ onBeforeUnmount(() => {
 }
 
 .category-preview-list__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 26px;
   color: var(--text-primary);
   font-weight: 600;
   text-align: left;
+  transition:
+    color 0.1s ease,
+    transform 0.1s ease;
 }
 
-.category-preview-list__link {
-  min-height: 44px;
-  padding: 0;
-  border-radius: 0;
-  display: inline-flex;
-  align-items: center;
-  background: transparent;
+.category-preview-list__title:hover {
+  color: #fff;
+}
+
+.category-preview-list__title:hover .category-preview-list__title-arrow {
+  transform: translateX(2px);
+}
+
+.category-preview-list__title-arrow {
+  font-size: 22px;
   color: var(--text-secondary);
-  white-space: nowrap;
-  transition: color 0.15s ease;
+  transition:
+    transform 0.1s ease,
+    color 0.1s ease;
 }
 
-.category-preview-list__link:hover {
+.category-preview-list__title:hover .category-preview-list__title-arrow {
   color: #fff;
 }
 
@@ -165,6 +172,7 @@ onBeforeUnmount(() => {
   display: flex;
   touch-action: pan-y pinch-zoom;
   margin-left: calc(var(--slide-spacing) * -1);
+  padding-top: 4px;
 }
 
 .category-preview-list__go-to-button {
@@ -179,8 +187,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   background: var(--accent-button-bg);
   transition:
-    transform 0.15s ease,
-    background-color 0.15s ease;
+    transform 0.1s ease,
+    background-color 0.1s ease;
 }
 
 .category-preview-list__go-to-button:hover {
