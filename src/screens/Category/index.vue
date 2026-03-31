@@ -50,6 +50,7 @@ import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import MenuItemCard from '@/components/MenuItemCard'
 import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
+import { getCategoryAnchor } from '@/utils/categoryAnchors'
 import { getProductCategoryLabel } from '@/utils/products'
 
 defineOptions({
@@ -82,7 +83,10 @@ async function syncCategoryPage() {
 
 function goToMain() {
   selectedCategory.value = categoryName.value
-  router.push({ name: 'main' })
+  router.push({
+    name: 'main',
+    hash: `#${getCategoryAnchor(categoryName.value)}`,
+  })
 }
 
 onMounted(() => {

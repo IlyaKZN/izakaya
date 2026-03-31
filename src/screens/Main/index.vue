@@ -14,6 +14,7 @@
       <CategoryPreviewList
         v-for="section in sections"
         :key="section.title"
+        :id="getCategoryAnchor(section.title)"
         class="main-screen__category-preview-list"
         :title="section.title"
         :menu-list="section.items"
@@ -31,7 +32,8 @@
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import CategoryPreviewList from '@/components/CategoryPreviewList'
-import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
+import { useCatalogStore } from '@/stores/catalog'
+import { getCategoryAnchor } from '@/utils/categoryAnchors'
 import { getProductCategoryLabel } from '@/utils/products'
 
 defineOptions({
@@ -39,26 +41,14 @@ defineOptions({
 })
 
 const catalogStore = useCatalogStore()
-const { filteredMenuList, selectedCategory, categories, isLoading, errorMessage } =
-  storeToRefs(catalogStore)
+const { filteredMenuList, categories, isLoading, errorMessage } = storeToRefs(catalogStore)
 
 onMounted(() => {
-  selectedCategory.value = ALL_CATEGORY
   void catalogStore.loadCatalog().catch(() => undefined)
 })
 
 const sections = computed(() => {
-  if (selectedCategory.value !== ALL_CATEGORY) {
-    return [
-      {
-        title: selectedCategory.value,
-        items: filteredMenuList.value,
-      },
-    ].filter((section) => section.items.length > 0)
-  }
-
   return categories.value
-    .filter((category) => category !== ALL_CATEGORY)
     .map((category) => ({
       title: category,
       items: filteredMenuList.value.filter((item) => getProductCategoryLabel(item) === category),
@@ -77,6 +67,7 @@ const sections = computed(() => {
 
 .main-screen__category-preview-list {
   margin-bottom: 0;
+  scroll-margin-top: calc(var(--app-header-height) + 16px);
 }
 
 .main-screen__empty {

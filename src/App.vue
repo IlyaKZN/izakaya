@@ -91,31 +91,33 @@ watch(
 
 <style lang="scss">
 .app {
+  --app-header-height: 132px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .app_header-shell {
-  max-height: 240px;
+  height: var(--app-header-height);
   opacity: 1;
   overflow: hidden;
   transition:
-    max-height 0.16s ease,
+    height 0.16s ease,
     opacity 0.14s ease;
 }
 
 .app_header-shell--collapsed {
-  max-height: 0;
+  height: 0;
   opacity: 0;
   pointer-events: none;
 }
 
 .app_header {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 30;
+  right: 0;
+  z-index: 40;
 }
 
 .app_header-toggle {
@@ -157,7 +159,7 @@ watch(
 .app_categories-list-wrap,
 .app_cart-wrap {
   position: sticky;
-  top: 104px;
+  top: calc(var(--app-header-height) + 24px);
 }
 
 .app_main-content {
@@ -192,6 +194,10 @@ watch(
 }
 
 @media (max-width: 1280px) {
+  .app {
+    --app-header-height: 184px;
+  }
+
   .router-container {
     grid-template-columns: 200px minmax(0, 1fr);
   }
@@ -209,6 +215,10 @@ watch(
 }
 
 @media (max-width: 900px) {
+  .app {
+    --app-header-height: 268px;
+  }
+
   .router-container {
     grid-template-columns: 1fr;
     padding: 16px;
@@ -226,6 +236,10 @@ watch(
 }
 
 @media (max-width: 640px) {
+  .app {
+    --app-header-height: 280px;
+  }
+
   .app_header-toggle {
     top: 10px;
     right: 12px;

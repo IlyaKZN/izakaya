@@ -1,7 +1,5 @@
 ﻿<template>
   <div class="categories-list">
-    <span class="categories-list__title">Категории</span>
-
     <button
       v-for="category in categories"
       :key="category"
@@ -19,7 +17,8 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { ALL_CATEGORY, useCatalogStore } from '@/stores/catalog'
+import { useCatalogStore } from '@/stores/catalog'
+import { getCategoryAnchor } from '@/utils/categoryAnchors'
 
 defineOptions({
   name: 'CategoriesList',
@@ -36,16 +35,9 @@ onMounted(() => {
 function handleCategoryClick(category: string) {
   selectedCategory.value = category
 
-  if (category === ALL_CATEGORY) {
-    router.push({ name: 'main' })
-    return
-  }
-
   router.push({
-    name: 'category',
-    params: {
-      category,
-    },
+    name: 'main',
+    hash: `#${getCategoryAnchor(category)}`,
   })
 }
 </script>
@@ -60,13 +52,6 @@ function handleCategoryClick(category: string) {
   border-radius: 0;
   background: transparent;
   border: none;
-}
-
-.categories-list__title {
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 4px;
-  font-weight: 600;
 }
 
 .categories-list__item {
@@ -102,10 +87,6 @@ function handleCategoryClick(category: string) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .categories-list__title {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 640px) {
@@ -121,12 +102,6 @@ function handleCategoryClick(category: string) {
 
   .categories-list::-webkit-scrollbar {
     display: none;
-  }
-
-  .categories-list__title {
-    flex: 0 0 auto;
-    width: 100%;
-    margin-bottom: 2px;
   }
 
   .categories-list__item {

@@ -262,15 +262,56 @@
           </p>
         </div>
 
-        <label class="admin-field admin-field--grow">
-          <span>Удаляемые ингредиенты</span>
-          <textarea
-            v-model.trim="ingredientsTextModel"
-            class="admin-textarea admin-textarea--details"
-            rows="4"
-            placeholder="Каждый ингредиент с новой строки"
-          />
-        </label>
+        <div class="admin-field admin-field--grow">
+          <div class="admin-variants__header">
+            <span>Удаляемые ингредиенты</span>
+
+            <button
+              type="button"
+              class="admin-button admin-button--ghost admin-button--small"
+              @click="addIngredient"
+            >
+              Добавить ингредиент
+            </button>
+          </div>
+
+          <div class="admin-ingredients">
+            <div
+              v-for="(ingredient, index) in ingredients"
+              :key="ingredient.id"
+              class="admin-ingredient-row"
+            >
+              <label class="admin-field admin-field--grow">
+                <span>Ингредиент</span>
+                <input
+                  :value="ingredient.ingredient_name"
+                  class="admin-input"
+                  placeholder="Например, Кинза"
+                  @input="
+                    updateIngredient(
+                      ingredient.id,
+                      ($event.target as HTMLInputElement).value,
+                    )
+                  "
+                />
+              </label>
+
+              <div class="admin-ingredient-row__actions">
+                <span class="admin-variant-row__index">Ингредиент {{ index + 1 }}</span>
+
+                <button
+                  type="button"
+                  class="admin-button admin-button--ghost admin-button--small"
+                  @click="removeIngredient(ingredient.id)"
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="admin-field__hint">Каждый удаляемый ингредиент задаётся отдельной строкой.</p>
+        </div>
 
         <div class="admin-product-form__actions">
           <button type="button" class="admin-button admin-button--ghost" @click="emit('reset')">
@@ -300,6 +341,7 @@ import type {
   CategoryOption,
   GroupedProduct,
   ProductFormState,
+  ProductIngredientDraft,
   ProductMode,
   ProductVariantDraft,
 } from '../types'
@@ -313,7 +355,7 @@ const props = defineProps<{
   productSuccess: string
   productForm: ProductFormState
   variants: ProductVariantDraft[]
-  ingredientsText: string
+  ingredients: ProductIngredientDraft[]
   productImageHint: string
   productImagePreview: string
   productImageInputKey: number
@@ -325,16 +367,11 @@ const emit = defineEmits<{
   startCreateProduct: []
   showProductList: []
   'update:variants': [value: ProductVariantDraft[]]
-  'update:ingredientsText': [value: string]
+  'update:ingredients': [value: ProductIngredientDraft[]]
   imageChange: [event: Event]
   reset: []
   submit: []
 }>()
-
-const ingredientsTextModel = computed({
-  get: () => props.ingredientsText,
-  set: (value: string) => emit('update:ingredientsText', value),
-})
 
 const showProductList = computed(() => props.productMode === 'edit' && !props.selectedProductId)
 const showProductForm = computed(() => props.productMode === 'create' || !!props.selectedProductId)
@@ -371,12 +408,43 @@ function removeVariant(variantId: string) {
   emit('update:variants', [createVariantDraft()])
 }
 
+function addIngredient() {
+  emit('update:ingredients', [...props.ingredients, createIngredientDraft()])
+}
+
+function updateIngredient(ingredientId: string, value: string) {
+  emit(
+    'update:ingredients',
+    props.ingredients.map((ingredient) =>
+      ingredient.id === ingredientId ? { ...ingredient, ingredient_name: value } : ingredient,
+    ),
+  )
+}
+
+function removeIngredient(ingredientId: string) {
+  const nextIngredients = props.ingredients.filter((ingredient) => ingredient.id !== ingredientId)
+
+  if (nextIngredients.length) {
+    emit('update:ingredients', nextIngredients)
+    return
+  }
+
+  emit('update:ingredients', [createIngredientDraft()])
+}
+
 function createVariantDraft(): ProductVariantDraft {
   return {
     id: `variant-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: '',
     quantity_value: '',
     price: '',
+  }
+}
+
+function createIngredientDraft(): ProductIngredientDraft {
+  return {
+    id: `ingredient-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    ingredient_name: '',
   }
 }
 

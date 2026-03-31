@@ -174,7 +174,7 @@ function enrichOrderItem(item: OrderItemRead) {
     ...item,
     productName: product?.name ?? 'Товар из заказа',
     productImage: product ? getProductImage(product, { thumbnail: true }) : '',
-    variantLabel: variant ? `${variant.name} ${variant.quantity_value} г` : '',
+    variantLabel: variant?.name ?? '',
     priceLabel: formatPrice(item.price),
     removedIngredientsLabel: item.removed_ingredients.map((entry) => entry.ingredient_name).join(', '),
   }

@@ -32,7 +32,7 @@
       <AdminProductsTab
         v-else-if="activeTab === 'products'"
         v-model:variants="variants"
-        v-model:ingredients-text="ingredientsText"
+        v-model:ingredients="ingredients"
         :grouped-products="groupedProducts"
         :category-options="categoryOptions"
         :product-mode="productMode"
@@ -88,6 +88,7 @@ import type {
   OrderFilterOption,
   OrderStatusOption,
   ProductFormState,
+  ProductIngredientDraft,
   ProductMode,
   ProductVariantDraft,
 } from './types'
@@ -135,10 +136,11 @@ const productForm = reactive<ProductFormState>({
 })
 
 const variants = ref<ProductVariantDraft[]>([])
-const ingredientsText = ref('')
+const ingredients = ref<ProductIngredientDraft[]>([])
 const productImageFile = ref<File | null>(null)
 const productImagePreview = ref('')
 let productVariantDraftId = 0
+let productIngredientDraftId = 0
 
 const orderFilterOptions = [
   { value: '', label: 'Все' },
@@ -261,6 +263,15 @@ function createEmptyVariantDraft(): ProductVariantDraft {
   }
 }
 
+function createEmptyIngredientDraft(): ProductIngredientDraft {
+  productIngredientDraftId += 1
+
+  return {
+    id: `ingredient-${productIngredientDraftId}`,
+    ingredient_name: '',
+  }
+}
+
 function resetProductForm() {
   productForm.name = ''
   productForm.category_id = ''
@@ -268,7 +279,7 @@ function resetProductForm() {
   productForm.price = ''
   productForm.is_active = true
   variants.value = [createEmptyVariantDraft()]
-  ingredientsText.value = ''
+  ingredients.value = [createEmptyIngredientDraft()]
   productImageFile.value = null
   productImagePreview.value = ''
   bumpProductImageInputKey()
@@ -311,9 +322,12 @@ function fillProductForm(product: ProductRead) {
         price: String(variant.price),
       }))
     : [createEmptyVariantDraft()]
-  ingredientsText.value = product.removable_ingredients
-    .map((ingredient) => ingredient.ingredient_name)
-    .join('\n')
+  ingredients.value = product.removable_ingredients.length
+    ? product.removable_ingredients.map((ingredient) => ({
+        id: `ingredient-${ingredient.id}`,
+        ingredient_name: ingredient.ingredient_name,
+      }))
+    : [createEmptyIngredientDraft()]
 }
 
 function fillProductFormFromSelection() {
@@ -379,13 +393,13 @@ function parseVariants(): ProductVariantCreate[] | undefined {
 }
 
 function parseIngredients() {
-  if (!ingredientsText.value.trim()) return undefined
-
-  return ingredientsText.value
-    .split('\n')
-    .map((line) => line.trim())
+  const filledIngredients = ingredients.value
+    .map((ingredient) => ingredient.ingredient_name.trim())
     .filter(Boolean)
-    .map((ingredient_name) => ({ ingredient_name }))
+
+  if (!filledIngredients.length) return undefined
+
+  return filledIngredients.map((ingredient_name) => ({ ingredient_name }))
 }
 
 function buildProductPayload() {

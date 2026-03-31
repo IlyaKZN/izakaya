@@ -50,8 +50,6 @@
           {{ item.name }}
         </span>
 
-        <span v-if="weightLabel" class="menu-item-screen__weight"> {{ weightLabel }} </span>
-
         <p v-if="item.description" class="menu-item-screen__description">
           {{ item.description }}
         </p>
@@ -71,9 +69,29 @@
               @click="selectedVariantId = variant.id"
             >
               <span>{{ variant.name }}</span>
-              <span>{{ variant.quantity_value }} г</span>
               <span>{{ formatProductPrice(item, variant) }}</span>
             </button>
+          </div>
+        </div>
+
+        <div v-if="item.removable_ingredients.length" class="menu-item-screen__ingredients-picker">
+          <div class="menu-item-screen__ingredient-toggle-list">
+            <label
+              v-for="ingredient in item.removable_ingredients"
+              :key="ingredient.id"
+              class="menu-item-screen__ingredient-toggle"
+              :class="{
+                'menu-item-screen__ingredient-toggle--active': isIngredientIncluded(ingredient.id),
+              }"
+            >
+              <input
+                class="menu-item-screen__ingredient-checkbox"
+                type="checkbox"
+                :checked="isIngredientIncluded(ingredient.id)"
+                @change="toggleIngredient(ingredient.id)"
+              />
+              <span>{{ ingredient.ingredient_name }}</span>
+            </label>
           </div>
         </div>
 
@@ -85,7 +103,7 @@
 
         <div v-if="!cartItem" class="menu-item-screen__add-container">
           <button
-            @click="cartStore.addToCart(item, selectedVariant)"
+            @click="cartStore.addToCart(item, selectedVariant, selectedRemovedIngredients)"
             class="menu-item-screen__add-to-cart-button"
             type="button"
           >
@@ -97,7 +115,7 @@
           <button
             class="menu-item-screen__change-count-button"
             type="button"
-            @click="cartStore.removeFromCart(item, selectedVariant)"
+            @click="cartStore.removeFromCart(item, selectedVariant, selectedRemovedIngredients)"
           >
             <span class="material-symbols"> remove </span>
           </button>
@@ -109,7 +127,7 @@
           <button
             class="menu-item-screen__change-count-button"
             type="button"
-            @click="cartStore.addToCart(item, selectedVariant)"
+            @click="cartStore.addToCart(item, selectedVariant, selectedRemovedIngredients)"
           >
             <span class="material-symbols"> add </span>
           </button>
@@ -131,7 +149,6 @@ import {
   getProductIngredients,
   getProductVariantById,
   getProductVariantsLabel,
-  getProductWeight,
 } from '@/utils/products'
 
 defineOptions({
@@ -145,6 +162,7 @@ const productsStore = useProductsStore()
 
 const isLoading = ref(false)
 const selectedVariantId = ref<string | null>(null)
+const includedIngredientIds = ref<string[]>([])
 const itemId = computed(() => String(route.params.id))
 
 const item = computed(() => productsStore.productsById[itemId.value])
@@ -156,16 +174,22 @@ const selectedVariant = computed(() => {
     getDefaultProductVariant(item.value)
   )
 })
+const selectedRemovedIngredients = computed(() =>
+  item.value
+    ? item.value.removable_ingredients.filter((ingredient) =>
+        !includedIngredientIds.value.includes(ingredient.id),
+      )
+    : [],
+)
 const cartItem = computed(() =>
-  item.value ? cartStore.getCartItem(item.value, selectedVariant.value) : null,
+  item.value
+    ? cartStore.getCartItem(item.value, selectedVariant.value, selectedRemovedIngredients.value)
+    : null,
 )
 const productImage = computed(() => (item.value ? getProductImage(item.value) : ''))
 const ingredients = computed(() => (item.value ? getProductIngredients(item.value) : []))
 const productPrice = computed(() =>
   item.value ? formatProductPrice(item.value, selectedVariant.value) : '',
-)
-const weightLabel = computed(() =>
-  item.value ? getProductWeight(item.value, selectedVariant.value) : null,
 )
 const variantsLabel = computed(() => (item.value ? getProductVariantsLabel(item.value) : null))
 
@@ -187,6 +211,7 @@ onMounted(() => {
 
 watch(itemId, () => {
   selectedVariantId.value = null
+  includedIngredientIds.value = []
   void loadProduct().catch(() => undefined)
 })
 
@@ -194,9 +219,25 @@ watch(
   item,
   (nextItem) => {
     selectedVariantId.value = nextItem ? (getDefaultProductVariant(nextItem)?.id ?? null) : null
+    includedIngredientIds.value = nextItem
+      ? nextItem.removable_ingredients.map((ingredient) => ingredient.id)
+      : []
   },
   { immediate: true },
 )
+
+function isIngredientIncluded(ingredientId: string) {
+  return includedIngredientIds.value.includes(ingredientId)
+}
+
+function toggleIngredient(ingredientId: string) {
+  if (isIngredientIncluded(ingredientId)) {
+    includedIngredientIds.value = includedIngredientIds.value.filter((id) => id !== ingredientId)
+    return
+  }
+
+  includedIngredientIds.value = [...includedIngredientIds.value, ingredientId]
+}
 
 function goToMain() {
   router.push({
@@ -294,11 +335,6 @@ function handleImageError(event: Event) {
   font-weight: 700;
 }
 
-.menu-item-screen__weight {
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-}
-
 .menu-item-screen__description {
   margin: 0 0 20px;
   color: var(--text-secondary);
@@ -319,6 +355,10 @@ function handleImageError(event: Event) {
 }
 
 .menu-item-screen__variant-picker {
+  margin-bottom: 20px;
+}
+
+.menu-item-screen__ingredients-picker {
   margin-bottom: 20px;
 }
 
@@ -349,6 +389,41 @@ function handleImageError(event: Event) {
 .menu-item-screen__variant-button--active {
   border-color: var(--accent-soft-border);
   background: var(--accent-soft);
+}
+
+.menu-item-screen__ingredient-toggle-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.menu-item-screen__ingredient-toggle {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--surface-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.menu-item-screen__ingredient-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.menu-item-screen__ingredient-toggle--active {
+  color: #fff;
+  border-color: var(--accent-soft-border);
 }
 
 .menu-item-screen__price {
@@ -453,6 +528,11 @@ function handleImageError(event: Event) {
   }
 
   .menu-item-screen__variant-list {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .menu-item-screen__ingredient-toggle-list {
     display: grid;
     grid-template-columns: 1fr;
   }

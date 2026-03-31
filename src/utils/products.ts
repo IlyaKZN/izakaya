@@ -76,21 +76,12 @@ export function getProductIngredients(product: ProductRead) {
   return product.removable_ingredients.map((ingredient) => ingredient.ingredient_name)
 }
 
-export function getProductWeight(product: ProductRead, variant?: ProductVariantRead | null) {
-  const selectedVariant = variant ?? getDefaultProductVariant(product)
-
-  if (!selectedVariant) return null
-
-  return `${selectedVariant.quantity_value} г`
-}
-
 export function getProductVariantsLabel(product: ProductRead) {
-  if (product.variants.length === 0) return null
-  if (product.variants.length === 1) return formatVariant(product.variants[0]!)
+  if (product.variants.length <= 1) return null
 
   return `${product.variants.length} варианта`
 }
 
 export function formatVariant(variant: ProductVariantRead) {
-  return `${variant.name} ${variant.quantity_value} г`
+  return variant.name
 }

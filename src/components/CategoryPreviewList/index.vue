@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
 }
 
 .category-preview-list__title-arrow {
-  font-size: 22px;
+  font-size: 14px;
   color: var(--text-secondary);
   transition:
     transform 0.1s ease,

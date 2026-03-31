@@ -23,10 +23,7 @@
     <div class="menu-item-card__info">
       <span @click="goToItem" class="menu-item-card__name">{{ menuItem.name }}</span>
 
-      <span v-if="weightLabel" class="menu-item-card__weight">
-        {{ weightLabel }}
-      </span>
-      <span v-else class="menu-item-card__description">{{ menuDescription }}</span>
+      <span class="menu-item-card__description">{{ menuDescription }}</span>
 
       <div class="menu-item-card__bottom-container">
         <span class="menu-item-card__price">{{ productPrice }}</span>
@@ -74,7 +71,6 @@ import {
   getProductVariantsLabel,
   getDefaultProductVariant,
   getProductImage,
-  getProductWeight,
 } from '@/utils/products'
 
 defineOptions({
@@ -90,7 +86,8 @@ const cartStore = useCartStore()
 
 const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
 const hasMultipleVariants = computed(() => menuItem.variants.length)
-const canChangeCount = computed(() => !hasMultipleVariants.value)
+const hasRemovableIngredients = computed(() => menuItem.removable_ingredients.length > 0)
+const canChangeCount = computed(() => !hasMultipleVariants.value && !hasRemovableIngredients.value)
 const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
 const productImage = computed(() => getProductImage(menuItem, { thumbnail: true }))
 const variantsLabel = computed(() => getProductVariantsLabel(menuItem))
@@ -99,13 +96,12 @@ const productPrice = computed(() =>
     ? `от ${getProductPrice(menuItem)} ₽`
     : formatProductPrice(menuItem, defaultVariant.value),
 )
-const weightLabel = computed(() => getProductWeight(menuItem, defaultVariant.value))
 const menuDescription = computed(
   () => menuItem.description || menuItem.category?.name || 'Без описания',
 )
 
 function handlePrimaryAction() {
-  if (hasMultipleVariants.value) {
+  if (hasMultipleVariants.value || hasRemovableIngredients.value) {
     goToItem()
     return
   }
@@ -218,16 +214,6 @@ function handleImageError(event: Event) {
   &:hover {
     text-decoration: underline;
   }
-}
-
-.menu-item-card__weight {
-  width: fit-content;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.12);
-  margin-bottom: 10px;
 }
 
 .menu-item-card__description {

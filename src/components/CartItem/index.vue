@@ -24,11 +24,15 @@
         {{ variantLabel }}
       </span>
 
+      <span v-if="removedIngredientsLabel" class="cart-item__removed-ingredients">
+        Без: {{ removedIngredientsLabel }}
+      </span>
+
       <div class="cart-item__count-container">
         <button
           class="cart-item__button"
           type="button"
-          @click="cartStore.removeFromCart(item.menuItem, item.selectedVariant)"
+          @click="cartStore.removeFromCart(item.menuItem, item.selectedVariant, item.removedIngredients)"
         >
           <span class="material-symbols"> remove </span>
         </button>
@@ -40,7 +44,7 @@
         <button
           class="cart-item__button"
           type="button"
-          @click="cartStore.addToCart(item.menuItem, item.selectedVariant)"
+          @click="cartStore.addToCart(item.menuItem, item.selectedVariant, item.removedIngredients)"
         >
           <span class="material-symbols"> add </span>
         </button>
@@ -70,6 +74,9 @@ const productImage = computed(() => getProductImage(item.menuItem, { thumbnail: 
 const totalPrice = computed(() => getProductPrice(item.menuItem, item.selectedVariant) * item.count)
 const variantLabel = computed(() =>
   item.selectedVariant ? formatVariant(item.selectedVariant) : null,
+)
+const removedIngredientsLabel = computed(() =>
+  item.removedIngredients.map((ingredient) => ingredient.ingredient_name).join(', '),
 )
 
 function handleImageError(event: Event) {
@@ -125,6 +132,12 @@ function handleImageError(event: Event) {
 .cart-item__variant {
   color: var(--text-secondary);
   font-size: 13px;
+}
+
+.cart-item__removed-ingredients {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .cart-item__count-container {

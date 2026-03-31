@@ -34,21 +34,13 @@ export const useCatalogStore = defineStore('catalog', () => {
   const errorMessage = ref('')
 
   const categories = computed(() => {
-    const orderedCategories = categoriesStore.categories
+    return categoriesStore.categories
       .filter((category) => category.is_active !== false)
       .map((category) => category.name)
-
-    return [ALL_CATEGORY, ...orderedCategories]
   })
 
   const filteredMenuList = computed(() => {
     return productsStore.products.filter((product) => {
-      const matchesCategory =
-        selectedCategory.value === ALL_CATEGORY ||
-        getProductCategoryLabel(product) === selectedCategory.value
-
-      if (!matchesCategory) return false
-
       return matchesQuery(product, searchQuery.value)
     })
   })

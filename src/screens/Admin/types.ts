@@ -30,6 +30,11 @@ export type ProductVariantDraft = {
   price: string
 }
 
+export type ProductIngredientDraft = {
+  id: string
+  ingredient_name: string
+}
+
 export type OrderFilterOption = AdminOption
 export type OrderStatusOption = AdminOption<OrderStatusEnum>
 export type ProductModeOption = AdminOption<ProductMode>

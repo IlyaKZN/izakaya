@@ -1,17 +1,29 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { OrderItemCreateInput, ProductRead, ProductVariantRead } from '@/types/api'
+import type {
+  OrderItemCreateInput,
+  ProductRead,
+  ProductRemovableIngredientRead,
+  ProductVariantRead,
+} from '@/types/api'
 import { getDefaultProductVariant } from '@/utils/products'
 
 export type TCartItem = {
   id: string
   menuItem: ProductRead
   selectedVariant: ProductVariantRead | null
+  removedIngredients: ProductRemovableIngredientRead[]
   count: number
 }
 
-function getCartItemId(productId: string, variantId?: string | null) {
-  return `${productId}:${variantId ?? 'base'}`
+function getCartItemId(productId: string, variantId?: string | null, removedIngredientIds: string[] = []) {
+  return `${productId}:${variantId ?? 'base'}:${removedIngredientIds.join(',') || 'full'}`
+}
+
+function normalizeRemovedIngredients(
+  removedIngredients: ProductRemovableIngredientRead[] = [],
+): ProductRemovableIngredientRead[] {
+  return [...removedIngredients].sort((left, right) => left.id.localeCompare(right.id))
 }
 
 export const useCartStore = defineStore('cart', () => {
@@ -19,19 +31,37 @@ export const useCartStore = defineStore('cart', () => {
 
   const cartItemList = computed(() => Object.values(cartItems.value))
 
-  function getCartKey(item: ProductRead, variant?: ProductVariantRead | null) {
+  function getCartKey(
+    item: ProductRead,
+    variant?: ProductVariantRead | null,
+    removedIngredients: ProductRemovableIngredientRead[] = [],
+  ) {
     const resolvedVariant = variant ?? getDefaultProductVariant(item)
+    const normalizedRemovedIngredients = normalizeRemovedIngredients(removedIngredients)
 
-    return getCartItemId(item.id, resolvedVariant?.id ?? null)
+    return getCartItemId(
+      item.id,
+      resolvedVariant?.id ?? null,
+      normalizedRemovedIngredients.map((ingredient) => ingredient.id),
+    )
   }
 
-  function getCartItem(item: ProductRead, variant?: ProductVariantRead | null) {
-    return cartItems.value[getCartKey(item, variant)] ?? null
+  function getCartItem(
+    item: ProductRead,
+    variant?: ProductVariantRead | null,
+    removedIngredients: ProductRemovableIngredientRead[] = [],
+  ) {
+    return cartItems.value[getCartKey(item, variant, removedIngredients)] ?? null
   }
 
-  function addToCart(item: ProductRead, variant?: ProductVariantRead | null) {
+  function addToCart(
+    item: ProductRead,
+    variant?: ProductVariantRead | null,
+    removedIngredients: ProductRemovableIngredientRead[] = [],
+  ) {
     const resolvedVariant = variant ?? getDefaultProductVariant(item)
-    const cartKey = getCartKey(item, resolvedVariant)
+    const normalizedRemovedIngredients = normalizeRemovedIngredients(removedIngredients)
+    const cartKey = getCartKey(item, resolvedVariant, normalizedRemovedIngredients)
 
     if (cartItems.value[cartKey]) {
       cartItems.value[cartKey]!.count = cartItems.value[cartKey]!.count + 1
@@ -40,13 +70,18 @@ export const useCartStore = defineStore('cart', () => {
         id: cartKey,
         menuItem: item,
         selectedVariant: resolvedVariant,
+        removedIngredients: normalizedRemovedIngredients,
         count: 1,
       }
     }
   }
 
-  function removeFromCart(item: ProductRead, variant?: ProductVariantRead | null) {
-    const cartKey = getCartKey(item, variant)
+  function removeFromCart(
+    item: ProductRead,
+    variant?: ProductVariantRead | null,
+    removedIngredients: ProductRemovableIngredientRead[] = [],
+  ) {
+    const cartKey = getCartKey(item, variant, removedIngredients)
     const cartItem = cartItems.value[cartKey]
 
     if (!cartItem) return
@@ -67,7 +102,7 @@ export const useCartStore = defineStore('cart', () => {
       product_id: item.menuItem.id,
       variant_id: item.selectedVariant?.id ?? null,
       quantity: item.count,
-      removed_ingredient_ids: [],
+      removed_ingredient_ids: item.removedIngredients.map((ingredient) => ingredient.id),
     }))
   }
 
