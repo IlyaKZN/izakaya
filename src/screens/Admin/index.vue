@@ -274,92 +274,94 @@
         <div v-if="productSuccess" class="admin-notice admin-notice--success">{{ productSuccess }}</div>
 
         <form class="admin-product-form" @submit.prevent="submitProduct">
-          <div class="admin-product-form__grid">
+          <div class="admin-product-form__body">
+            <div class="admin-product-form__grid">
+              <label class="admin-field admin-field--grow">
+                <span>Название</span>
+                <input v-model.trim="productForm.name" class="admin-input" required />
+              </label>
+
+              <label class="admin-field admin-field--grow">
+                <span>ID категории</span>
+                <input v-model.trim="productForm.category_id" class="admin-input" required />
+              </label>
+
+              <label class="admin-field admin-field--grow">
+                <span>Цена</span>
+                <input
+                  v-model.trim="productForm.price"
+                  class="admin-input"
+                  placeholder="Например, 500"
+                />
+              </label>
+
+              <label class="admin-field admin-field--grow">
+                <span>Файл изображения</span>
+                <input
+                  ref="productImageInput"
+                  class="admin-input admin-input--file"
+                  type="file"
+                  accept="image/*"
+                  @change="handleProductImageChange"
+                />
+              </label>
+            </div>
+
+            <p v-if="productImageHint" class="admin-field__hint">{{ productImageHint }}</p>
+
+            <div v-if="productImagePreview" class="admin-product-image-preview">
+              <img :src="productImagePreview" alt="Предпросмотр изображения товара" />
+            </div>
+
             <label class="admin-field admin-field--grow">
-              <span>Название</span>
-              <input v-model.trim="productForm.name" class="admin-input" required />
+              <span>Описание</span>
+              <textarea v-model.trim="productForm.description" class="admin-textarea" rows="3" />
+            </label>
+
+            <label class="admin-checkbox">
+              <input v-model="productForm.is_active" type="checkbox" />
+              <span>Товар активен</span>
             </label>
 
             <label class="admin-field admin-field--grow">
-              <span>ID категории</span>
-              <input v-model.trim="productForm.category_id" class="admin-input" required />
-            </label>
-
-            <label class="admin-field admin-field--grow">
-              <span>Цена</span>
-              <input
-                v-model.trim="productForm.price"
-                class="admin-input"
-                placeholder="Например, 500"
+              <span>Варианты</span>
+              <textarea
+                v-model.trim="variantsText"
+                class="admin-textarea admin-textarea--details"
+                rows="4"
+                placeholder="Формат строки: Название|Вес в граммах|Цена"
               />
             </label>
 
             <label class="admin-field admin-field--grow">
-              <span>Файл изображения</span>
-              <input
-                ref="productImageInput"
-                class="admin-input admin-input--file"
-                type="file"
-                accept="image/*"
-                @change="handleProductImageChange"
+              <span>Удаляемые ингредиенты</span>
+              <textarea
+                v-model.trim="ingredientsText"
+                class="admin-textarea admin-textarea--details"
+                rows="4"
+                placeholder="Каждый ингредиент с новой строки"
               />
             </label>
-          </div>
 
-          <p v-if="productImageHint" class="admin-field__hint">{{ productImageHint }}</p>
+            <div class="admin-product-form__actions">
+              <button
+                type="button"
+                class="admin-button admin-button--ghost"
+                @click="resetProductForm"
+              >
+                Очистить
+              </button>
 
-          <div v-if="productImagePreview" class="admin-product-image-preview">
-            <img :src="productImagePreview" alt="Предпросмотр изображения товара" />
-          </div>
-
-          <label class="admin-field admin-field--grow">
-            <span>Описание</span>
-            <textarea v-model.trim="productForm.description" class="admin-textarea" rows="3" />
-          </label>
-
-          <label class="admin-checkbox">
-            <input v-model="productForm.is_active" type="checkbox" />
-            <span>Товар активен</span>
-          </label>
-
-          <label class="admin-field admin-field--grow">
-            <span>Варианты</span>
-            <textarea
-              v-model.trim="variantsText"
-              class="admin-textarea"
-              rows="4"
-              placeholder="Формат строки: Название|Вес в граммах|Цена"
-            />
-          </label>
-
-          <label class="admin-field admin-field--grow">
-            <span>Удаляемые ингредиенты</span>
-            <textarea
-              v-model.trim="ingredientsText"
-              class="admin-textarea"
-              rows="4"
-              placeholder="Каждый ингредиент с новой строки"
-            />
-          </label>
-
-          <div class="admin-product-form__actions">
-            <button
-              type="button"
-              class="admin-button admin-button--ghost"
-              @click="resetProductForm"
-            >
-              Очистить
-            </button>
-
-            <button type="submit" class="admin-button" :disabled="isSubmittingProduct">
-              {{
-                isSubmittingProduct
-                  ? 'Сохраняем...'
-                  : productMode === 'create'
-                    ? 'Создать товар'
-                    : 'Сохранить товар'
-              }}
-            </button>
+              <button type="submit" class="admin-button" :disabled="isSubmittingProduct">
+                {{
+                  isSubmittingProduct
+                    ? 'Сохраняем...'
+                    : productMode === 'create'
+                      ? 'Создать товар'
+                      : 'Сохранить товар'
+                }}
+              </button>
+            </div>
           </div>
         </form>
       </section>
@@ -998,6 +1000,7 @@ onMounted(() => {
 .admin-card__header,
 .admin-toolbar,
 .admin-product-form,
+.admin-product-form__body,
 .admin-site__actions,
 .admin-product-form__actions,
 .admin-orders {
@@ -1220,19 +1223,23 @@ onMounted(() => {
 }
 
 .admin-input {
-  height: 42px;
+  height: 40px;
 }
 
 .admin-input--file {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 7px;
+  padding-bottom: 7px;
 }
 
 .admin-textarea {
-  min-height: 100px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  min-height: 88px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   resize: vertical;
+}
+
+.admin-textarea--details {
+  min-height: 120px;
 }
 
 .admin-field__hint {
@@ -1423,7 +1430,22 @@ onMounted(() => {
 .admin-product-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
+}
+
+.admin-product-form__body {
+  width: min(100%, 1120px);
+}
+
+.admin-product-form__actions {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-product-form__actions .admin-button {
+  min-width: 220px;
 }
 
 .admin-checkbox {
@@ -1460,6 +1482,16 @@ onMounted(() => {
   .admin-card__header--row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-product-form__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-product-form__actions .admin-button {
+    width: 100%;
+    min-width: 0;
   }
 
   .admin-card--stats,

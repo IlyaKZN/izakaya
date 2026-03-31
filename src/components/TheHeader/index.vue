@@ -1,69 +1,90 @@
-﻿<template>
+<template>
   <header class="header">
     <div class="header__inner">
-      <RouterLink class="header__brand" :to="{ name: 'main' }" aria-label="Перейти на главную">
-        <span class="header__brand-mark">Viet Kitchen</span>
-        <span class="header__brand-subtitle">доставка вьетнамской кухни</span>
-      </RouterLink>
+      <div class="header__bar">
+        <div class="header__brand-group">
+          <RouterLink class="header__brand" :to="{ name: 'main' }" aria-label="Перейти на главную">
+            <span class="header__brand-badge">
+              <span class="header__brand-badge-top">viet</span>
+              <span class="header__brand-badge-main">kitchen</span>
+              <span class="header__brand-badge-bottom">delivery</span>
+            </span>
 
-      <label class="header__search">
-        <span class="material-symbols">search</span>
-        <input v-model="searchQuery" type="text" placeholder="Поиск по меню" />
-      </label>
-
-      <div class="header__meta">
-        <div class="header__meta-item">
-          <span class="material-symbols">schedule</span>
-          <span>11:30 - 22:25</span>
-        </div>
-        <div class="header__meta-item">
-          <span class="material-symbols">call</span>
-          <span>+7 (843) 558-78-87</span>
-        </div>
-      </div>
-
-      <nav class="header__nav" aria-label="Основная навигация">
-        <RouterLink class="header__nav-link" :to="{ name: 'main' }">
-          <span class="material-symbols">restaurant_menu</span>
-          <span>Меню</span>
-        </RouterLink>
-
-        <RouterLink v-if="role === 'admin'" class="header__nav-link" :to="{ name: 'admin' }">
-          <span class="material-symbols">shield_person</span>
-          <span>Админка</span>
-        </RouterLink>
-      </nav>
-
-      <div class="header__auth">
-        <button
-          v-if="!isAuthenticated"
-          type="button"
-          class="header__auth-button"
-          @click="isAuthPopupOpen = true"
-        >
-          <span class="material-symbols">person</span>
-          <span>Войти</span>
-        </button>
-
-        <div v-else class="header__profile">
-          <RouterLink class="header__profile-link" :to="{ name: 'profile' }">
-            <span class="material-symbols">account_circle</span>
-            <span>Профиль</span>
+            <span class="header__brand-copy">
+              <span class="header__brand-mark">VIET KITCHEN</span>
+              <span class="header__brand-subtitle">вьетнамская кухня с доставкой</span>
+            </span>
           </RouterLink>
+        </div>
 
-          <div class="header__profile-meta">
-            <span class="header__profile-name">{{ profileName }}</span>
-            <span class="header__profile-phone">{{ profilePhone }}</span>
+        <div class="header__center">
+          <label class="header__search">
+            <span class="material-symbols header__search-icon">search</span>
+            <input v-model="searchQuery" type="text" placeholder="Поиск по меню" />
+            <span class="header__search-action" aria-hidden="true">
+              <span class="material-symbols">search</span>
+            </span>
+          </label>
+
+          <div class="header__meta">
+            <div class="header__meta-item">
+              <span class="material-symbols">schedule</span>
+              <div class="header__meta-copy">
+                <span class="header__meta-label">Время работы</span>
+                <span class="header__meta-value">11:30 – 22:25</span>
+              </div>
+            </div>
+
+            <div class="header__meta-item">
+              <span class="material-symbols">call</span>
+              <div class="header__meta-copy">
+                <span class="header__meta-label">Телефон</span>
+                <span class="header__meta-value">+7 (843) 558-78-87</span>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <button
-            type="button"
-            class="header__logout-button"
-            :disabled="isLoggingOut"
-            @click="handleLogout"
-          >
-            {{ isLoggingOut ? 'Выходим...' : 'Выйти' }}
-          </button>
+        <div class="header__actions">
+          <nav class="header__nav" aria-label="Основная навигация">
+            <RouterLink v-if="role === 'admin'" class="header__nav-link" :to="{ name: 'admin' }">
+              <span class="material-symbols">shield_person</span>
+              <span>Админка</span>
+            </RouterLink>
+          </nav>
+
+          <div class="header__auth">
+            <button
+              v-if="!isAuthenticated"
+              type="button"
+              class="header__auth-button"
+              @click="isAuthPopupOpen = true"
+            >
+              <span class="material-symbols">person</span>
+              <span>Войти</span>
+            </button>
+
+            <div v-else class="header__profile">
+              <RouterLink class="header__profile-link" :to="{ name: 'profile' }">
+                <span class="material-symbols">account_circle</span>
+                <span>Профиль</span>
+              </RouterLink>
+
+              <div class="header__profile-meta">
+                <span class="header__profile-name">{{ profileName }}</span>
+                <span class="header__profile-phone">{{ profilePhone }}</span>
+              </div>
+
+              <button
+                type="button"
+                class="header__logout-button"
+                :disabled="isLoggingOut"
+                @click="handleLogout"
+              >
+                {{ isLoggingOut ? 'Выходим...' : 'Выйти' }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -113,70 +134,194 @@ const handleLogout = async () => {
 <style lang="scss">
 .header {
   width: 100%;
-  border-bottom: 1px solid var(--surface-border);
-  background: rgba(18, 14, 17, 0.97);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(228, 186, 132, 0.14);
+  background:
+    linear-gradient(180deg, rgba(13, 10, 8, 0.98), rgba(10, 8, 7, 0.95)),
+    rgba(18, 14, 17, 0.97);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(18px);
 }
 
 .header__inner {
   max-width: 1700px;
   margin: 0 auto;
-  min-height: 80px;
-  padding: 0 24px;
+  padding: 14px 24px;
+}
+
+.header__bar {
+  min-height: 78px;
   display: flex;
   align-items: center;
   gap: 18px;
+  padding: 10px 0;
+}
+
+.header__brand-group,
+.header__center,
+.header__actions {
+  display: flex;
+  align-items: center;
+}
+
+.header__brand-group {
+  gap: 12px;
+}
+
+.header__center {
+  flex: 1;
+  min-width: 0;
+  gap: 18px;
+}
+
+.header__actions {
+  gap: 14px;
 }
 
 .header__brand {
   display: flex;
-  flex-direction: column;
-  min-width: 220px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
 }
 
-.header__brand-mark {
-  font-size: 23px;
-  letter-spacing: 0.3px;
+.header__brand-badge {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  background: radial-gradient(circle at 30% 30%, #f0cb98, #d0a36b 58%, #835d33 100%);
+  color: #21150c;
+  text-transform: lowercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+.header__brand-badge-top,
+.header__brand-badge-bottom {
+  font-size: 8px;
   font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.header__brand-badge-main {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.header__brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header__brand-mark {
+  font-size: 21px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 .header__brand-subtitle {
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: rgba(241, 224, 201, 0.7);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .header__search {
-  height: 46px;
   flex: 1;
+  min-width: 0;
+  height: 52px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(228, 186, 132, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0 12px 0 14px;
+}
+
+.header__search-icon {
+  color: rgba(241, 224, 201, 0.55);
+}
+
+.header__search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  outline: none;
+  font: inherit;
+}
+
+.header__search input::placeholder {
+  color: rgba(241, 224, 201, 0.42);
+}
+
+.header__search-action {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   border-radius: 12px;
-  border: 1px solid var(--surface-border);
-  background: rgba(255, 255, 255, 0.04);
-  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #22160e;
+  background: linear-gradient(180deg, #efc892, #d8aa6f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
 
-  span {
-    color: var(--text-secondary);
-  }
-
-  input {
-    flex: 1;
-    background: transparent;
-    border: 0;
-    color: var(--text-primary);
-    outline: none;
-    font: inherit;
-  }
+.header__search-action .material-symbols {
+  font-size: 22px;
 }
 
 .header__meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.header__meta-item {
+  min-height: 52px;
+  padding: 0 4px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f3e4d0;
+}
+
+.header__meta-item > .material-symbols {
+  font-size: 20px;
+  color: #deb47f;
+}
+
+.header__meta-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header__meta-label {
+  color: rgba(241, 224, 201, 0.6);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.header__meta-value {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .header__nav {
@@ -185,83 +330,70 @@ const handleLogout = async () => {
   gap: 8px;
 }
 
-.header__nav-link {
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 12px;
-  display: inline-flex;
+.header__nav-link,
+.header__auth-button,
+.header__logout-button,
+.header__profile-link {
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 16px;
+  display: flex;
   align-items: center;
   gap: 8px;
   color: #fff;
-  background: rgba(255, 255, 255, 0.05);
   white-space: nowrap;
+  border: 1px solid rgba(228, 186, 132, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.header__nav-link:hover,
+.header__auth-button:hover,
+.header__logout-button:hover,
+.header__profile-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(228, 186, 132, 0.18);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .router-link-active.header__nav-link,
 .router-link-active.header__profile-link {
-  background: rgba(127, 46, 67, 0.35);
-}
-
-.header__meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-secondary);
-  font-size: 13px;
-
-  span:first-child {
-    font-size: 18px;
-  }
+  color: #21150c;
+  border-color: rgba(228, 186, 132, 0.22);
+  background: linear-gradient(180deg, #efc892, #d8aa6f);
 }
 
 .header__auth {
-  margin-left: auto;
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.header__auth-button,
-.header__logout-button {
-  height: 42px;
-  border-radius: 12px;
-  padding: 0 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-}
-
 .header__auth-button {
-  background: linear-gradient(180deg, rgba(138, 97, 112, 0.9), rgba(114, 76, 89, 0.9));
+  color: #21150c;
+  background: linear-gradient(180deg, #efc892, #d8aa6f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .header__profile {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px;
-  padding-left: 12px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.045);
-}
-
-.header__profile-link {
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  white-space: nowrap;
+  padding: 6px;
+  padding-left: 8px;
+  border-radius: 18px;
+  border: 1px solid rgba(228, 186, 132, 0.08);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .header__profile-meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 0 4px;
   min-width: 0;
 }
 
@@ -272,17 +404,42 @@ const handleLogout = async () => {
 }
 
 .header__profile-phone {
-  color: var(--text-secondary);
+  color: rgba(241, 224, 201, 0.62);
   font-size: 12px;
-}
-
-.header__logout-button {
-  background: rgba(255, 255, 255, 0.06);
 }
 
 .header__auth-button:disabled,
 .header__logout-button:disabled {
   opacity: 0.55;
+}
+
+@media (max-width: 1460px) {
+  .header__center {
+    gap: 12px;
+  }
+
+  .header__meta {
+    gap: 8px;
+  }
+
+  .header__meta-item {
+    padding: 0 2px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .header__bar {
+    flex-wrap: wrap;
+  }
+
+  .header__center,
+  .header__actions {
+    width: 100%;
+  }
+
+  .header__actions {
+    justify-content: space-between;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -293,35 +450,35 @@ const handleLogout = async () => {
 
 @media (max-width: 900px) {
   .header__inner {
-    padding: 0 16px;
-    min-height: 72px;
-    flex-wrap: wrap;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding: 10px 16px;
+  }
+
+  .header__bar {
+    min-height: auto;
+    gap: 14px;
+    padding: 12px;
   }
 
   .header__brand {
-    min-width: 150px;
+    min-width: 0;
   }
 
   .header__brand-subtitle {
     display: none;
   }
 
-  .header__search {
-    order: 3;
+  .header__center,
+  .header__actions {
     width: 100%;
-    flex-basis: 100%;
   }
 
-  .header__auth {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-end;
+  .header__center {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .header__nav {
-    margin-left: auto;
+  .header__actions {
+    justify-content: space-between;
   }
 
   .header__profile {
@@ -348,56 +505,69 @@ const handleLogout = async () => {
   }
 
   .header__inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px 12px;
+    padding: 8px 12px 12px;
   }
 
-  .header__brand {
+  .header__bar {
+    padding: 8px 0;
+  }
+
+  .header__brand-copy {
     min-width: 0;
   }
 
   .header__brand-mark {
-    font-size: 18px;
-  }
-
-  .header__nav {
-    margin-left: 0;
+    font-size: 17px;
   }
 
   .header__nav-link,
   .header__auth-button,
   .header__profile-link,
   .header__logout-button {
-    height: 38px;
+    min-height: 40px;
     padding: 0 10px;
     font-size: 13px;
   }
 
+  .header__search {
+    height: 46px;
+  }
+
+  .header__search-action {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .header__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .header__nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header__nav-link {
+    justify-content: center;
+  }
+
   .header__profile {
     width: 100%;
-    grid-column: 1 / -1;
     justify-content: space-between;
     gap: 8px;
     padding-left: 8px;
   }
 
   .header__auth {
-    width: auto;
-    justify-content: flex-end;
+    width: 100%;
   }
 
   .header__profile-meta {
     flex: 1;
-  }
-
-  .header__search {
-    order: initial;
-    grid-column: 1 / -1;
-    height: 42px;
-    flex-basis: auto;
   }
 
   .header__nav-link span:last-child,
@@ -410,8 +580,13 @@ const handleLogout = async () => {
   .header__profile-link,
   .header__auth-button {
     width: 38px;
+    min-width: 38px;
     justify-content: center;
     padding: 0;
+  }
+
+  .header__auth-button {
+    width: 100%;
   }
 
   .header__logout-button {
