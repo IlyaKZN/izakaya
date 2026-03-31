@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 const MainScreen = () => import('@/screens/Main')
 const CategoryScreen = () => import('@/screens/Category')
 const MenuItemScreen = () => import('@/screens/MenuItem')
+const CheckoutScreen = () => import('@/screens/Checkout')
 const ProfileScreen = () => import('@/screens/Profile')
 const AdminScreen = () => import('@/screens/Admin')
 const AdminOrderScreen = () => import('@/screens/AdminOrder')
@@ -64,6 +65,15 @@ const router = createRouter({
       component: ProfileScreen,
       meta: {
         requiresAuth: true,
+        transition: 'page-slide',
+      },
+    },
+    {
+      name: 'checkout',
+      path: '/checkout',
+      component: CheckoutScreen,
+      meta: {
+        wideLayout: true,
         transition: 'page-slide',
       },
     },

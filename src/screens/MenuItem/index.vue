@@ -76,22 +76,18 @@
 
         <div v-if="item.removable_ingredients.length" class="menu-item-screen__ingredients-picker">
           <div class="menu-item-screen__ingredient-toggle-list">
-            <label
+            <button
               v-for="ingredient in item.removable_ingredients"
               :key="ingredient.id"
+              type="button"
               class="menu-item-screen__ingredient-toggle"
               :class="{
                 'menu-item-screen__ingredient-toggle--active': isIngredientIncluded(ingredient.id),
               }"
+              @click="toggleIngredient(ingredient.id)"
             >
-              <input
-                class="menu-item-screen__ingredient-checkbox"
-                type="checkbox"
-                :checked="isIngredientIncluded(ingredient.id)"
-                @change="toggleIngredient(ingredient.id)"
-              />
               <span>{{ ingredient.ingredient_name }}</span>
-            </label>
+            </button>
           </div>
         </div>
 
@@ -411,19 +407,23 @@ function handleImageError(event: Event) {
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.menu-item-screen__ingredient-checkbox {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--accent);
+    color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .menu-item-screen__ingredient-toggle--active {
   color: #fff;
   border-color: var(--accent-soft-border);
+  background: var(--accent-soft);
+}
+
+.menu-item-screen__ingredient-toggle:not(.menu-item-screen__ingredient-toggle--active) {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.menu-item-screen__ingredient-toggle:hover {
+  transform: translateY(-1px);
 }
 
 .menu-item-screen__price {
