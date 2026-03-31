@@ -1,22 +1,41 @@
 <template>
   <section class="admin-card">
-    <div class="admin-card__header admin-card__header--row">
+    <div class="admin-card__header admin-card__header--left admin-card__header--row">
       <div>
         <p class="admin-card__eyebrow">Товары</p>
-        <h2 class="admin-card__title">Создание и редактирование</h2>
+        <h2 class="admin-card__title">
+          {{
+            productMode === 'create'
+              ? 'Создание товара'
+              : showProductForm
+                ? 'Редактирование товара'
+                : 'Список товаров'
+          }}
+        </h2>
       </div>
 
-      <label class="admin-field">
-        <span>Режим</span>
-        <BaseSelect
-          v-model="productModeModel"
-          :options="productModeOptions"
-          @change="emit('modeChange')"
-        />
-      </label>
+      <div class="admin-product-form__top-actions">
+        <button
+          v-if="!showProductForm"
+          type="button"
+          class="admin-button"
+          @click="emit('startCreateProduct')"
+        >
+          Создать новый
+        </button>
+
+        <button
+          v-if="showProductForm"
+          type="button"
+          class="admin-button admin-button--ghost"
+          @click="emit('showProductList')"
+        >
+          К списку товаров
+        </button>
+      </div>
     </div>
 
-    <div v-if="productMode === 'edit'" class="admin-toolbar">
+    <div v-if="showProductList" class="admin-toolbar">
       <div class="admin-field admin-field--grow">
         <span>Товар</span>
 
@@ -78,10 +97,14 @@
       </div>
     </div>
 
-    <div v-if="productError" class="admin-notice admin-notice--error">{{ productError }}</div>
-    <div v-if="productSuccess" class="admin-notice admin-notice--success">{{ productSuccess }}</div>
+    <div v-if="showProductForm && productError" class="admin-notice admin-notice--error">
+      {{ productError }}
+    </div>
+    <div v-if="showProductForm && productSuccess" class="admin-notice admin-notice--success">
+      {{ productSuccess }}
+    </div>
 
-    <form class="admin-product-form" @submit.prevent="emit('submit')">
+    <form v-if="showProductForm" class="admin-product-form" @submit.prevent="emit('submit')">
       <div class="admin-product-form__body">
         <div class="admin-product-form__grid">
           <label class="admin-field admin-field--grow">
@@ -106,24 +129,38 @@
               placeholder="Например, 500"
             />
           </label>
+        </div>
 
-          <label class="admin-field admin-field--grow">
-            <span>Файл изображения</span>
+        <label class="admin-field admin-field--grow">
+          <span>Изображение</span>
+
+          <div
+            class="admin-product-image-picker product-image-shell"
+            :class="{ 'product-image-shell--fallback': !productImagePreview }"
+          >
             <input
               :key="productImageInputKey"
-              class="admin-input admin-input--file"
+              class="admin-product-image-picker__input"
               type="file"
               accept="image/*"
               @change="emit('imageChange', $event)"
             />
-          </label>
-        </div>
+
+            <img
+              v-if="productImagePreview"
+              class="admin-product-image-picker__image"
+              :src="productImagePreview"
+              alt="Изображение товара"
+              @error="handleImageError"
+            />
+
+            <div class="admin-product-image-picker__placeholder product-image-placeholder">
+              Нет фото
+            </div>
+          </div>
+        </label>
 
         <p v-if="productImageHint" class="admin-field__hint">{{ productImageHint }}</p>
-
-        <div v-if="productImagePreview" class="admin-product-image-preview">
-          <img :src="productImagePreview" alt="Предпросмотр изображения товара" />
-        </div>
 
         <label class="admin-field admin-field--grow">
           <span>Описание</span>
@@ -135,15 +172,95 @@
           <span>Товар активен</span>
         </label>
 
-        <label class="admin-field admin-field--grow">
-          <span>Варианты</span>
-          <textarea
-            v-model.trim="variantsTextModel"
-            class="admin-textarea admin-textarea--details"
-            rows="4"
-            placeholder="Формат строки: Название|Вес в граммах|Цена"
-          />
-        </label>
+        <div class="admin-field admin-field--grow">
+          <div class="admin-variants__header">
+            <span>Варианты</span>
+
+            <button
+              type="button"
+              class="admin-button admin-button--ghost admin-button--small"
+              @click="addVariant"
+            >
+              Добавить вариант
+            </button>
+          </div>
+
+          <div class="admin-variants">
+            <div
+              v-for="(variant, index) in variants"
+              :key="variant.id"
+              class="admin-variant-row"
+            >
+              <div class="admin-variant-row__grid">
+                <label class="admin-field admin-field--grow">
+                  <span>Название</span>
+                  <input
+                    :value="variant.name"
+                    class="admin-input"
+                    placeholder="Например, Стандарт"
+                    @input="
+                      updateVariantField(
+                        variant.id,
+                        'name',
+                        ($event.target as HTMLInputElement).value,
+                      )
+                    "
+                  />
+                </label>
+
+                <label class="admin-field admin-field--grow">
+                  <span>Вес или объём</span>
+                  <input
+                    :value="variant.quantity_value"
+                    class="admin-input"
+                    inputmode="decimal"
+                    placeholder="Например, 500"
+                    @input="
+                      updateVariantField(
+                        variant.id,
+                        'quantity_value',
+                        ($event.target as HTMLInputElement).value,
+                      )
+                    "
+                  />
+                </label>
+
+                <label class="admin-field admin-field--grow">
+                  <span>Цена</span>
+                  <input
+                    :value="variant.price"
+                    class="admin-input"
+                    inputmode="decimal"
+                    placeholder="Например, 400"
+                    @input="
+                      updateVariantField(
+                        variant.id,
+                        'price',
+                        ($event.target as HTMLInputElement).value,
+                      )
+                    "
+                  />
+                </label>
+              </div>
+
+              <div class="admin-variant-row__actions">
+                <span class="admin-variant-row__index">Вариант {{ index + 1 }}</span>
+
+                <button
+                  type="button"
+                  class="admin-button admin-button--ghost admin-button--small"
+                  @click="removeVariant(variant.id)"
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <p class="admin-field__hint">
+            Каждый вариант задаётся отдельно: название, вес или объём и цена.
+          </p>
+        </div>
 
         <label class="admin-field admin-field--grow">
           <span>Удаляемые ингредиенты</span>
@@ -184,19 +301,18 @@ import type {
   GroupedProduct,
   ProductFormState,
   ProductMode,
-  ProductModeOption,
+  ProductVariantDraft,
 } from '../types'
 
 const props = defineProps<{
   groupedProducts: GroupedProduct[]
   categoryOptions: readonly CategoryOption[]
   productMode: ProductMode
-  productModeOptions: readonly ProductModeOption[]
   selectedProductId: string
   productError: string
   productSuccess: string
   productForm: ProductFormState
-  variantsText: string
+  variants: ProductVariantDraft[]
   ingredientsText: string
   productImageHint: string
   productImagePreview: string
@@ -205,33 +321,63 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:productMode': [value: ProductMode]
-  modeChange: []
   selectProduct: [productId: string]
-  'update:variantsText': [value: string]
+  startCreateProduct: []
+  showProductList: []
+  'update:variants': [value: ProductVariantDraft[]]
   'update:ingredientsText': [value: string]
   imageChange: [event: Event]
   reset: []
   submit: []
 }>()
 
-const productModeModel = computed({
-  get: () => props.productMode,
-  set: (value: ProductMode) => emit('update:productMode', value),
-})
-
-const variantsTextModel = computed({
-  get: () => props.variantsText,
-  set: (value: string) => emit('update:variantsText', value),
-})
-
 const ingredientsTextModel = computed({
   get: () => props.ingredientsText,
   set: (value: string) => emit('update:ingredientsText', value),
 })
 
+const showProductList = computed(() => props.productMode === 'edit' && !props.selectedProductId)
+const showProductForm = computed(() => props.productMode === 'create' || !!props.selectedProductId)
+
 function formatPrice(value: string) {
   return `${Number(value).toFixed(0)} ₽`
+}
+
+function addVariant() {
+  emit('update:variants', [...props.variants, createVariantDraft()])
+}
+
+function updateVariantField(
+  variantId: string,
+  field: 'name' | 'quantity_value' | 'price',
+  value: string,
+) {
+  emit(
+    'update:variants',
+    props.variants.map((variant) =>
+      variant.id === variantId ? { ...variant, [field]: value } : variant,
+    ),
+  )
+}
+
+function removeVariant(variantId: string) {
+  const nextVariants = props.variants.filter((variant) => variant.id !== variantId)
+
+  if (nextVariants.length) {
+    emit('update:variants', nextVariants)
+    return
+  }
+
+  emit('update:variants', [createVariantDraft()])
+}
+
+function createVariantDraft(): ProductVariantDraft {
+  return {
+    id: `variant-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: '',
+    quantity_value: '',
+    price: '',
+  }
 }
 
 function handleImageError(event: Event) {

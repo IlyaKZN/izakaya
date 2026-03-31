@@ -13,14 +13,18 @@
 
       <label class="auth-popup__field">
         <span class="auth-popup__label">Телефон</span>
-        <input
-          v-model="phone"
-          class="auth-popup__input"
-          type="tel"
-          inputmode="tel"
-          placeholder="+7 (999) 123-45-67"
-          :disabled="isSubmitting"
-        />
+        <div class="auth-popup__phone-field">
+          <span class="auth-popup__phone-prefix">+7</span>
+          <input
+            :value="phone"
+            class="auth-popup__input auth-popup__input--phone"
+            type="tel"
+            inputmode="numeric"
+            placeholder="9991234567"
+            :disabled="isSubmitting"
+            @input="handlePhoneInput"
+          />
+        </div>
       </label>
 
       <label v-if="isCodeStep" class="auth-popup__field">
@@ -97,9 +101,7 @@ const normalizedPhone = computed(() => {
   const digits = phone.value.replace(/\D/g, '')
 
   if (!digits) return ''
-  if (digits.startsWith('8')) return `7${digits.slice(1)}`
-  if (digits.startsWith('7')) return digits
-  return `7${digits}`
+  return `7${digits.slice(0, 10)}`
 })
 
 const formattedPhone = computed(() => {
@@ -152,6 +154,20 @@ const resetToPhoneStep = () => {
   isCodeStep.value = false
   code.value = ''
   resetMessages()
+}
+
+const handlePhoneInput = (event: Event) => {
+  const target = event.target
+
+  if (!(target instanceof HTMLInputElement)) return
+
+  let digits = target.value.replace(/\D/g, '')
+
+  if ((digits.startsWith('7') || digits.startsWith('8')) && digits.length > 10) {
+    digits = digits.slice(1)
+  }
+
+  phone.value = digits.slice(0, 10)
 }
 
 const requestCode = async () => {
@@ -286,6 +302,43 @@ watch(
   color: #fff;
   padding: 0 14px;
   font: inherit;
+}
+
+.auth-popup__phone-field {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #17161b;
+  overflow: hidden;
+}
+
+.auth-popup__phone-prefix {
+  flex-shrink: 0;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-popup__input--phone {
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.auth-popup__phone-field:focus-within {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.auth-popup__phone-field:focus-within .auth-popup__phone-prefix {
+  border-right-color: rgba(255, 255, 255, 0.06);
 }
 
 .auth-popup__error,

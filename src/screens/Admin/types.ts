@@ -23,6 +23,13 @@ export type ProductFormState = {
   is_active: boolean
 }
 
+export type ProductVariantDraft = {
+  id: string
+  name: string
+  quantity_value: string
+  price: string
+}
+
 export type OrderFilterOption = AdminOption
 export type OrderStatusOption = AdminOption<OrderStatusEnum>
 export type ProductModeOption = AdminOption<ProductMode>

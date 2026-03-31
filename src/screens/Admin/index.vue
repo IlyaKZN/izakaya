@@ -31,12 +31,11 @@
 
       <AdminProductsTab
         v-else-if="activeTab === 'products'"
-        v-model:product-mode="productMode"
-        v-model:variants-text="variantsText"
+        v-model:variants="variants"
         v-model:ingredients-text="ingredientsText"
         :grouped-products="groupedProducts"
         :category-options="categoryOptions"
-        :product-mode-options="productModeOptions"
+        :product-mode="productMode"
         :selected-product-id="selectedProductId"
         :product-error="productError"
         :product-success="productSuccess"
@@ -45,8 +44,9 @@
         :product-image-preview="productImagePreview"
         :product-image-input-key="productImageInputKey"
         :is-submitting-product="isSubmittingProduct"
-        @mode-change="handleProductModeChange"
         @select-product="selectProduct"
+        @start-create-product="startCreateProduct"
+        @show-product-list="showProductList"
         @image-change="handleProductImageChange"
         @reset="resetProductForm"
         @submit="submitProduct"
@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAdminStore } from '@/stores/admin'
@@ -75,6 +75,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCategoriesStore } from '@/stores/categories'
 import { useProductsStore } from '@/stores/products'
 import { useSiteStore } from '@/stores/site'
+import { getProductImage } from '@/utils/products'
 import type { OrderRead, OrderStatusEnum, ProductRead, ProductVariantCreate } from '@/types/api'
 import AdminOrdersTab from './components/AdminOrdersTab.vue'
 import AdminProductsTab from './components/AdminProductsTab.vue'
@@ -88,7 +89,7 @@ import type {
   OrderStatusOption,
   ProductFormState,
   ProductMode,
-  ProductModeOption,
+  ProductVariantDraft,
 } from './types'
 
 defineOptions({
@@ -120,7 +121,7 @@ const ordersError = ref('')
 const productError = ref('')
 const productSuccess = ref('')
 const siteActionMessage = ref('')
-const productMode = ref<ProductMode>('create')
+const productMode = ref<ProductMode>('edit')
 const selectedProductId = ref('')
 const productImageInputKey = ref(0)
 let adminPollingId: ReturnType<typeof setInterval> | null = null
@@ -133,10 +134,11 @@ const productForm = reactive<ProductFormState>({
   is_active: true,
 })
 
-const variantsText = ref('')
+const variants = ref<ProductVariantDraft[]>([])
 const ingredientsText = ref('')
 const productImageFile = ref<File | null>(null)
 const productImagePreview = ref('')
+let productVariantDraftId = 0
 
 const orderFilterOptions = [
   { value: '', label: 'Все' },
@@ -154,11 +156,6 @@ const orderStatusOptions = [
   { value: 'completed', label: 'Завершён' },
   { value: 'cancelled', label: 'Отменён' },
 ] as const satisfies readonly OrderStatusOption[]
-
-const productModeOptions = [
-  { value: 'create', label: 'Новый товар' },
-  { value: 'edit', label: 'Редактировать' },
-] as const satisfies readonly ProductModeOption[]
 
 const categoryOptions = computed<CategoryOption[]>(() =>
   categories.value.map((category) => ({
@@ -253,22 +250,30 @@ function bumpProductImageInputKey() {
   productImageInputKey.value += 1
 }
 
+function createEmptyVariantDraft(): ProductVariantDraft {
+  productVariantDraftId += 1
+
+  return {
+    id: `variant-${productVariantDraftId}`,
+    name: '',
+    quantity_value: '',
+    price: '',
+  }
+}
+
 function resetProductForm() {
   productForm.name = ''
   productForm.category_id = ''
   productForm.description = ''
   productForm.price = ''
   productForm.is_active = true
-  variantsText.value = ''
+  variants.value = [createEmptyVariantDraft()]
   ingredientsText.value = ''
   productImageFile.value = null
   productImagePreview.value = ''
   bumpProductImageInputKey()
   productError.value = ''
   productSuccess.value = ''
-  if (productMode.value === 'create') {
-    selectedProductId.value = ''
-  }
 }
 
 function handleProductModeChange() {
@@ -276,6 +281,12 @@ function handleProductModeChange() {
   productSuccess.value = ''
 
   if (productMode.value === 'create') {
+    selectedProductId.value = ''
+    resetProductForm()
+    return
+  }
+
+  if (!selectedProductId.value) {
     resetProductForm()
     return
   }
@@ -290,11 +301,16 @@ function fillProductForm(product: ProductRead) {
   productForm.price = product.price ?? ''
   productForm.is_active = product.is_active
   productImageFile.value = null
-  productImagePreview.value = product.image_url ?? ''
+  productImagePreview.value = getProductImage(product)
   bumpProductImageInputKey()
-  variantsText.value = product.variants
-    .map((variant) => `${variant.name}|${variant.quantity_value}|${variant.price}`)
-    .join('\n')
+  variants.value = product.variants.length
+    ? product.variants.map((variant) => ({
+        id: `variant-${variant.id}`,
+        name: variant.name,
+        quantity_value: String(variant.quantity_value),
+        price: String(variant.price),
+      }))
+    : [createEmptyVariantDraft()]
   ingredientsText.value = product.removable_ingredients
     .map((ingredient) => ingredient.ingredient_name)
     .join('\n')
@@ -315,36 +331,51 @@ function fillProductFormFromSelection() {
 }
 
 function selectProduct(productId: string) {
+  productMode.value = 'edit'
   selectedProductId.value = productId
   fillProductFormFromSelection()
 }
 
+function startCreateProduct() {
+  productMode.value = 'create'
+  selectedProductId.value = ''
+  resetProductForm()
+}
+
+function showProductList() {
+  productMode.value = 'edit'
+  selectedProductId.value = ''
+  resetProductForm()
+}
+
 function parseVariants(): ProductVariantCreate[] | undefined {
-  if (!variantsText.value.trim()) return undefined
+  const filledVariants = variants.value.filter((variant) =>
+    [variant.name, variant.quantity_value, variant.price].some((value) => value.trim()),
+  )
 
-  return variantsText.value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [name, quantityValue, price] = line.split('|').map((part) => part.trim())
+  if (!filledVariants.length) return undefined
 
-      if (!name || !quantityValue || !price) {
-        throw new Error('Заполните варианты в формате: Название|Вес в граммах|Цена')
-      }
+  return filledVariants.map((variant) => {
+    const name = variant.name.trim()
+    const quantityValue = variant.quantity_value.trim()
+    const price = variant.price.trim()
 
-      const parsedQuantity = Number(quantityValue)
+    if (!name || !quantityValue || !price) {
+      throw new Error('Заполните вариант целиком: название, вес или объём и цену')
+    }
 
-      if (!Number.isFinite(parsedQuantity)) {
-        throw new Error('Вес варианта должен быть числом')
-      }
+    const parsedQuantity = Number(quantityValue)
 
-      return {
-        name,
-        quantity_value: parsedQuantity,
-        price,
-      }
-    })
+    if (!Number.isFinite(parsedQuantity)) {
+      throw new Error('Вес или объём варианта должен быть числом')
+    }
+
+    return {
+      name,
+      quantity_value: parsedQuantity,
+      price,
+    }
+  })
 }
 
 function parseIngredients() {
@@ -387,8 +418,8 @@ function handleProductImageChange(event: Event) {
   productImageFile.value = file
 
   if (!file) {
-    productImagePreview.value =
-      products.value.find((item) => item.id === selectedProductId.value)?.image_url ?? ''
+    const selectedProduct = products.value.find((item) => item.id === selectedProductId.value)
+    productImagePreview.value = selectedProduct ? getProductImage(selectedProduct) : ''
     return
   }
 
@@ -519,6 +550,12 @@ onMounted(() => {
   adminPollingId = setInterval(() => {
     void loadAdminData()
   }, 5000)
+})
+
+watch(activeTab, (nextTab) => {
+  if (nextTab !== 'products') return
+
+  showProductList()
 })
 
 onBeforeUnmount(() => {

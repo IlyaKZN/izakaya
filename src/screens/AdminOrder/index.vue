@@ -261,6 +261,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
   font-feature-settings:
@@ -370,6 +373,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-order-card {
@@ -545,6 +550,11 @@ onMounted(() => {
 }
 
 @media (max-width: 640px) {
+  .admin-order-screen__content {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
   .admin-order-screen__hero,
   .admin-order-item,
   .admin-order-item__top {
