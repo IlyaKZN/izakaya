@@ -152,3 +152,7 @@ export function postRequest<T>(path: string, body?: unknown, query?: QueryParams
 export function patchRequest<T>(path: string, body?: unknown, query?: QueryParams) {
   return request<T>('PATCH', path, { body, query })
 }
+
+export function deleteRequest<T>(path: string, query?: QueryParams) {
+  return request<T>('DELETE', path, { query })
+}

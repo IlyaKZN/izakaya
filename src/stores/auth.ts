@@ -18,6 +18,10 @@ import type {
   VerifySMSRequest,
 } from '@/types/api'
 
+function toAuthRole(role?: string | null): AuthRole | null {
+  return role === 'user' || role === 'admin' ? role : null
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const session = readAuthSession()
   const accessToken = ref(session.accessToken)
@@ -29,7 +33,12 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => Boolean(accessToken.value))
 
   function syncTokens(tokens: Token) {
-    setAuthTokens(tokens)
+    const normalizedRole = toAuthRole(tokens.role)
+
+    setAuthTokens({
+      ...tokens,
+      ...(normalizedRole ? { role: normalizedRole } : {}),
+    })
   }
 
   function clearSession() {
@@ -70,7 +79,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      const response = await authApi.logout()
+      const refreshToken = refreshTokenValue.value
+      const response = refreshToken
+        ? await authApi.logout({ refresh_token: refreshToken })
+        : ({} satisfies ApiEmptyResponse)
       clearSession()
 
       return response

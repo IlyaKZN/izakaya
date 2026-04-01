@@ -120,7 +120,7 @@ export const useCheckoutStore = defineStore('checkout', () => {
         ...profile.last_address,
         label: [profile.last_address.street, profile.last_address.house].filter(Boolean).join(', '),
         intercom: null,
-        privateHouse: false,
+        privateHouse: profile.last_address.is_private_house ?? false,
         saveAddress: true,
       }
     }

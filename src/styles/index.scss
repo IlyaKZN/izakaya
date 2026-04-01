@@ -8,11 +8,11 @@
   --surface-border: rgba(255, 255, 255, 0.12);
   --text-primary: #eff4f1;
   --text-secondary: #c8bcc1;
-  --accent: #7f2e43;
-  --accent-strong: #672235;
-  --accent-soft: rgba(141, 42, 68, 0.374);
-  --accent-soft-strong: rgba(127, 46, 67, 0.28);
-  --accent-soft-border: rgba(127, 46, 67, 0.3);
+  --accent: #8f1d3f;
+  --accent-strong: #65132c;
+  --accent-soft: rgba(143, 29, 63, 0.34);
+  --accent-soft-strong: rgba(101, 19, 44, 0.34);
+  --accent-soft-border: rgba(143, 29, 63, 0.38);
   --accent-button-bg: linear-gradient(180deg, var(--accent), var(--accent-strong));
   --font-sans: 'Manrope', 'Segoe UI', sans-serif;
   --radius-md: 14px;
@@ -41,8 +41,8 @@ body {
   font-family: var(--font-sans);
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top left, rgba(167, 111, 74, 0.13), transparent 28%),
-    radial-gradient(circle at top right, rgba(127, 46, 67, 0.16), transparent 26%),
+    radial-gradient(circle at top left, rgba(143, 29, 63, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(101, 19, 44, 0.2), transparent 26%),
     linear-gradient(180deg, #09090a 0%, #0e0d0f 32%, #0a0a0b 100%);
   background-attachment: fixed;
   overflow-x: hidden;
@@ -69,8 +69,8 @@ body::before {
 body::after {
   background:
     radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.035), transparent 24%),
-    radial-gradient(circle at 18% 78%, rgba(127, 46, 67, 0.12), transparent 20%),
-    radial-gradient(circle at 85% 70%, rgba(167, 111, 74, 0.11), transparent 18%);
+    radial-gradient(circle at 18% 78%, rgba(143, 29, 63, 0.14), transparent 20%),
+    radial-gradient(circle at 85% 70%, rgba(101, 19, 44, 0.14), transparent 18%);
   opacity: 0.9;
 }
 

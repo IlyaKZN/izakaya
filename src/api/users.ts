@@ -1,10 +1,10 @@
-import { getRequest } from '@/api/http'
-import type { OrderRead, UserRead } from '@/types/api'
+import { getRequest, patchRequest } from '@/api/http'
+import type { UserRead, UserUpdate } from '@/types/api'
 
 export function getProfile() {
   return getRequest<UserRead>('/api/v1/users/me')
 }
 
-export function getMyUserOrders() {
-  return getRequest<OrderRead[]>('/api/v1/users/me/orders')
+export function updateProfile(payload: UserUpdate) {
+  return patchRequest<UserRead>('/api/v1/users/me', payload)
 }

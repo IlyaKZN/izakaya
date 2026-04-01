@@ -20,6 +20,6 @@ export function refreshToken(payload: TokenRefreshRequest) {
   return postRequest<TokenRefreshResponse>('/api/v1/auth/refresh', payload)
 }
 
-export function logout() {
-  return postRequest<ApiEmptyResponse>('/api/v1/auth/logout')
+export function logout(payload: TokenRefreshRequest) {
+  return postRequest<ApiEmptyResponse>('/api/v1/auth/logout', payload)
 }

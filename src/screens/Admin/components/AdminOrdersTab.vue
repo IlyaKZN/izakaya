@@ -1,31 +1,7 @@
 <template>
   <div class="admin-orders-tab">
-    <section class="admin-card admin-card--stats">
-      <div class="admin-stat">
-        <span class="admin-stat__value">{{ sortedOrders.length }}</span>
-        <span class="admin-stat__label">Всего в выдаче</span>
-      </div>
-      <div class="admin-stat">
-        <span class="admin-stat__value">{{ countByStatus('new') }}</span>
-        <span class="admin-stat__label">Новые</span>
-      </div>
-      <div class="admin-stat">
-        <span class="admin-stat__value">{{ countByStatus('cooking') }}</span>
-        <span class="admin-stat__label">Готовятся</span>
-      </div>
-      <div class="admin-stat">
-        <span class="admin-stat__value">{{ countByStatus('delivering') }}</span>
-        <span class="admin-stat__label">В пути</span>
-      </div>
-    </section>
-
     <section class="admin-card admin-card--wide">
       <div class="admin-card__header admin-card__header--row">
-        <div>
-          <p class="admin-card__eyebrow">Заказы</p>
-          <h2 class="admin-card__title">Лента заказов</h2>
-        </div>
-
         <div class="admin-order-filters">
           <button
             v-for="option in orderFilterOptions"
@@ -36,6 +12,7 @@
             @click="emit('filterChange', option.value)"
           >
             {{ option.label }}
+            <span class="admin-filter-chip__count">{{ countByFilter(option.value) }}</span>
           </button>
         </div>
       </div>
@@ -91,7 +68,7 @@
                 'admin-status-chip--pending': updatingOrderId === order.id,
               }"
               :disabled="updatingOrderId === order.id"
-              @click="emit('orderStatusChange', order, statusOption.value)"
+              @click="requestStatusChange(order, statusOption.value)"
             >
               {{ statusOption.label }}
             </button>
@@ -101,14 +78,48 @@
         </article>
       </div>
     </section>
+
+    <BasePopup
+      :model-value="isStatusConfirmOpen"
+      :show-close-button="false"
+      content-class="admin-confirm-popup"
+      @update:model-value="handlePopupClose"
+    >
+      <div class="admin-confirm-popup__content">
+        <h3 class="admin-confirm-popup__title">Подтвердить изменение статуса?</h3>
+        <p class="admin-confirm-popup__text">
+          <template v-if="pendingOrder && pendingStatus">
+            Заказ {{ shortOrderId(pendingOrder.id) }} будет переведён в статус
+            «{{ statusLabel(pendingStatus) }}».
+          </template>
+        </p>
+
+        <div class="admin-confirm-popup__actions">
+          <button
+            type="button"
+            class="admin-button admin-button--ghost"
+            @click="handlePopupClose(false)"
+          >
+            Отмена
+          </button>
+
+          <button type="button" class="admin-button" @click="confirmStatusChange">
+            Подтвердить
+          </button>
+        </div>
+      </div>
+    </BasePopup>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import BasePopup from '@/components/BasePopup'
 import type { OrderRead, OrderStatusEnum } from '@/types/api'
 import type { OrderFilterOption, OrderStatusOption } from '../types'
 
 const props = defineProps<{
+  allOrders: OrderRead[]
   sortedOrders: OrderRead[]
   ordersError: string
   ordersFilter: string
@@ -123,8 +134,40 @@ const emit = defineEmits<{
   openOrder: [orderId: string]
 }>()
 
-function countByStatus(status: OrderStatusEnum) {
-  return props.sortedOrders.filter((order) => order.status === status).length
+const isStatusConfirmOpen = ref(false)
+const pendingOrder = ref<OrderRead | null>(null)
+const pendingStatus = ref<OrderStatusEnum | null>(null)
+
+function countByFilter(filter: string) {
+  if (!filter) return props.allOrders.length
+
+  return props.allOrders.filter((order) => order.status === filter).length
+}
+
+function requestStatusChange(order: OrderRead, nextStatus: string | number) {
+  const resolvedStatus = String(nextStatus) as OrderStatusEnum
+
+  if (resolvedStatus === order.status || props.updatingOrderId === order.id) return
+
+  pendingOrder.value = order
+  pendingStatus.value = resolvedStatus
+  isStatusConfirmOpen.value = true
+}
+
+function handlePopupClose(nextValue = false) {
+  isStatusConfirmOpen.value = nextValue
+
+  if (!nextValue) {
+    pendingOrder.value = null
+    pendingStatus.value = null
+  }
+}
+
+function confirmStatusChange() {
+  if (!pendingOrder.value || !pendingStatus.value) return
+
+  emit('orderStatusChange', pendingOrder.value, pendingStatus.value)
+  handlePopupClose(false)
 }
 
 function formatDate(value: string) {
@@ -164,3 +207,57 @@ function paymentLabel(paymentMethod: string) {
   )
 }
 </script>
+
+<style lang="scss">
+.admin-confirm-popup {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(18, 18, 20, 0.96);
+  color: #fff;
+}
+
+.admin-confirm-popup__content {
+  padding: 22px;
+}
+
+.admin-confirm-popup__title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.admin-confirm-popup__text {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.admin-confirm-popup__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .admin-confirm-popup__content {
+    padding: 16px;
+  }
+
+  .admin-confirm-popup__title {
+    font-size: 20px;
+  }
+
+  .admin-confirm-popup__actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-confirm-popup__actions .admin-button {
+    width: 100%;
+  }
+}
+</style>

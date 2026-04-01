@@ -58,15 +58,6 @@
   gap: 12px;
 }
 
-.admin-card__eyebrow {
-  margin: 0 0 8px;
-  color: var(--admin-amber);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
 .admin-card__title {
   margin: 0;
   color: #fff;
@@ -121,67 +112,14 @@
   padding: 20px;
 }
 
-.admin-card--stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  padding: 10px;
-  margin-bottom: 24px;
-}
-
-.admin-orders-tab .admin-card--stats,
 .admin-orders-tab .admin-card--wide {
   background: transparent;
   border: none;
   box-shadow: none;
 }
 
-.admin-orders-tab .admin-card--stats {
-  padding: 0;
-}
-
 .admin-orders-tab .admin-card--wide {
   padding: 0;
-}
-
-.admin-stat {
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.admin-stat:nth-child(1) {
-  background: linear-gradient(180deg, rgba(240, 186, 99, 0.12), rgba(255, 255, 255, 0.03));
-}
-
-.admin-stat:nth-child(2) {
-  background: linear-gradient(180deg, rgba(239, 127, 154, 0.12), rgba(255, 255, 255, 0.03));
-}
-
-.admin-stat:nth-child(3) {
-  background: linear-gradient(180deg, rgba(118, 183, 255, 0.12), rgba(255, 255, 255, 0.03));
-}
-
-.admin-stat:nth-child(4) {
-  background: linear-gradient(180deg, rgba(111, 221, 176, 0.12), rgba(255, 255, 255, 0.03));
-}
-
-.admin-stat__value {
-  display: block;
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 2px;
-  letter-spacing: -0.03em;
-}
-
-.admin-stat__label {
-  color: rgba(245, 230, 205, 0.82);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .admin-card__header,
@@ -221,19 +159,43 @@
 
 .admin-filter-chip,
 .admin-status-chip {
-  min-height: 36px;
-  padding: 0 12px;
+  min-height: 44px;
+  padding: 0 16px;
   border-radius: 999px;
   color: rgba(236, 225, 232, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(255, 255, 255, 0.06);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
+}
+
+.admin-filter-chip {
+  gap: 8px;
+}
+
+.admin-filter-chip__count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-button-bg);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.admin-filter-chip--active .admin-filter-chip__count {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 .admin-filter-chip--active,
@@ -825,7 +787,6 @@
 }
 
 @media (max-width: 960px) {
-  .admin-card--stats,
   .admin-product-form__grid,
   .admin-order__meta {
     grid-template-columns: 1fr 1fr;
@@ -853,7 +814,6 @@
     min-width: 0;
   }
 
-  .admin-card--stats,
   .admin-product-form__grid,
   .admin-order__meta,
   .admin-variant-row__grid {

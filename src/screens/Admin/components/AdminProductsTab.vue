@@ -211,14 +211,13 @@
                 <label class="admin-field admin-field--grow">
                   <span>Вес или объём</span>
                   <input
-                    :value="variant.quantity_value"
+                    :value="variant.weight"
                     class="admin-input"
-                    inputmode="decimal"
-                    placeholder="Например, 500"
+                    placeholder="Например, 500 г"
                     @input="
                       updateVariantField(
                         variant.id,
-                        'quantity_value',
+                        'weight',
                         ($event.target as HTMLInputElement).value,
                       )
                     "
@@ -386,7 +385,7 @@ function addVariant() {
 
 function updateVariantField(
   variantId: string,
-  field: 'name' | 'quantity_value' | 'price',
+  field: 'name' | 'weight' | 'price',
   value: string,
 ) {
   emit(
@@ -436,7 +435,7 @@ function createVariantDraft(): ProductVariantDraft {
   return {
     id: `variant-draft-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: '',
-    quantity_value: '',
+    weight: '',
     price: '',
   }
 }

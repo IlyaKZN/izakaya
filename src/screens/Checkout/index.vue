@@ -251,6 +251,7 @@ const {
 } = storeToRefs(checkoutStore)
 
 const isAddressPopupOpen = ref(false)
+const { applyPromoCode, submitOrder } = checkoutStore
 
 function handleAddressConfirm(address: CheckoutAddress) {
   selectedAddress.value = address

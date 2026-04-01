@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <BasePopup
     :model-value="modelValue"
     :show-close-button="false"
@@ -42,14 +42,33 @@
 
           <label class="address-popup__field">
             <span class="address-popup__label">Улица и дом</span>
+
             <div class="address-popup__address-row">
-              <input
-                v-model.trim="form.street"
-                class="address-popup__input"
-                type="text"
-                placeholder="Например, Кремлевская улица, 27"
-                @keydown.enter.prevent="searchAddress"
-              />
+              <div ref="suggestContainerRef" class="address-popup__suggest-container">
+                <input
+                  v-model.trim="form.street"
+                  class="address-popup__input"
+                  type="text"
+                  placeholder="Например, Баумана, 1"
+                  autocomplete="off"
+                  @input="handleStreetInput"
+                  @focus="handleStreetFocus"
+                  @keydown.enter.prevent="searchAddress"
+                />
+
+                <div v-if="isSuggestOpen" class="address-popup__suggest-list">
+                  <button
+                    v-for="item in suggestResults"
+                    :key="`${item.address}-${item.coords.join(',')}`"
+                    type="button"
+                    class="address-popup__suggest-item"
+                    @click="selectSuggest(item)"
+                  >
+                    {{ item.address }}
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="button"
                 class="address-popup__search"
@@ -62,7 +81,17 @@
           </label>
 
           <p class="address-popup__hint">
-            Кликните по карте Казани, перетащите метку или введите адрес и нажмите «Найти».
+            Начните вводить адрес, выберите подсказку или кликните по карте.
+          </p>
+          <p
+            v-if="deliveryStatusMessage"
+            class="address-popup__hint"
+            :class="{
+              'address-popup__hint--error': deliveryStatusKind === 'error',
+              'address-popup__hint--success': deliveryStatusKind === 'success',
+            }"
+          >
+            {{ deliveryStatusMessage }}
           </p>
           <p v-if="addressLookupError" class="address-popup__hint address-popup__hint--error">
             {{ addressLookupError }}
@@ -119,7 +148,7 @@
           <button
             type="button"
             class="address-popup__submit"
-            :disabled="!form.street"
+            :disabled="isConfirmDisabled"
             @click="confirmAddress"
           >
             Подтвердить адрес
@@ -129,7 +158,7 @@
         <template v-else>
           <h2 class="address-popup__title">Самовывоз</h2>
           <p class="address-popup__pickup-text">
-            Выберите ближайший ресторан на карте справа и оформите заказ без доставки.
+            Выберите точку на карте справа, чтобы сориентироваться по зоне доставки.
           </p>
         </template>
       </div>
@@ -142,17 +171,23 @@
               {{ selectedAddressLabel || 'Выберите адрес на карте' }}
             </p>
           </div>
-          <span class="address-popup__map-badge">Яндекс.Карты</span>
+          <span class="address-popup__map-badge">OpenStreetMap</span>
         </div>
 
         <div class="address-popup__map-shell">
-          <div ref="mapElement" class="address-popup__map" :class="{ 'address-popup__map--error': !!mapError }"></div>
+          <div
+            ref="mapElement"
+            class="address-popup__map"
+            :class="{ 'address-popup__map--error': !!mapError }"
+          />
           <div v-if="isMapLoading" class="address-popup__map-overlay">
             Загружаем карту Казани...
           </div>
-          <div v-else-if="mapError" class="address-popup__map-overlay address-popup__map-overlay--error">
+          <div
+            v-else-if="mapError"
+            class="address-popup__map-overlay address-popup__map-overlay--error"
+          >
             <p>{{ mapError }}</p>
-            <p>Добавьте `VITE_YANDEX_MAPS_API_KEY` в `.env`, чтобы выбор адреса на карте заработал.</p>
           </div>
         </div>
       </div>
@@ -162,18 +197,21 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import * as geoApi from '@/api/geo'
 import BasePopup from '@/components/BasePopup'
-import type { OrderAddressInput } from '@/types/api'
+import type { SuggestItem } from '@/types/api'
 import type { CheckoutAddress } from './types'
 import {
-  KAZAN_BOUNDS,
+  createOpenStreetMapStyle,
+  DELIVERY_ZONES_SOURCE_ID,
   KAZAN_CENTER,
-  loadYandexMapsApi,
+  KAZAN_ZOOM,
+  loadMapLibre,
   normalizeAddressLabel,
-  type YandexMapInstance,
-  type YandexMapsApi,
-  type YandexPlacemarkInstance,
-} from '@/utils/yandexMaps'
+  type MapLibreApi,
+  type MapLibreMap,
+  type MapLibreMarker,
+} from '@/utils/mapLibre'
 
 defineOptions({
   name: 'AddressPopup',
@@ -189,15 +227,20 @@ const emit = defineEmits<{
   (e: 'confirm', value: CheckoutAddress): void
 }>()
 
-const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY?.trim() ?? ''
-
 const activeTab = ref<'delivery' | 'pickup'>('delivery')
 const mapElement = ref<HTMLElement | null>(null)
+const suggestContainerRef = ref<HTMLElement | null>(null)
 const isMapLoading = ref(false)
 const isGeocoding = ref(false)
+const isSuggestLoading = ref(false)
 const mapError = ref('')
 const addressLookupError = ref('')
 const selectedAddressLabel = ref('')
+const deliveryStatusMessage = ref('')
+const deliveryStatusKind = ref<'neutral' | 'success' | 'error'>('neutral')
+const suggestResults = ref<SuggestItem[]>([])
+const isSuggestOpen = ref(false)
+const isInDeliveryZone = ref<boolean | null>(null)
 
 const form = reactive({
   street: '',
@@ -213,34 +256,45 @@ const form = reactive({
 
 const addressCoordinates = ref<[number, number] | null>(null)
 
-let ymaps: YandexMapsApi | null = null
-let map: YandexMapInstance | null = null
-let placemark: YandexPlacemarkInstance | null = null
+let maplibre: MapLibreApi | null = null
+let map: MapLibreMap | null = null
+let userMarker: MapLibreMarker | null = null
+let suggestTimer: ReturnType<typeof setTimeout> | null = null
+let suggestRequestId = 0
 
 const canSearchAddress = computed(
   () => !!form.street.trim() && !isGeocoding.value && !isMapLoading.value && !mapError.value,
 )
 
-const updatePlacemark = (coordinates: [number, number], caption: string) => {
-  if (!placemark) return
+const isConfirmDisabled = computed(() => {
+  if (activeTab.value !== 'delivery') return true
 
-  placemark.geometry.setCoordinates(coordinates)
-  placemark.properties.set('iconCaption', caption)
+  return !form.street.trim() || isGeocoding.value || isInDeliveryZone.value !== true
+})
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }
 
-const applySelectedAddress = (address: string, coordinates?: [number, number]) => {
-  const normalizedAddress = normalizeAddressLabel(address)
-  form.street = normalizedAddress
-  selectedAddressLabel.value = normalizedAddress
-
-  if (coordinates) {
-    addressCoordinates.value = coordinates
-    updatePlacemark(coordinates, normalizedAddress)
-    map?.setCenter(coordinates, 16, { duration: 250 })
-  }
+function updateDeliveryStatus(message: string, kind: 'neutral' | 'success' | 'error') {
+  deliveryStatusMessage.value = message
+  deliveryStatusKind.value = kind
 }
 
-const splitStreetAndHouse = (value: string) => {
+function hideSuggests() {
+  isSuggestOpen.value = false
+}
+
+function showSuggests() {
+  isSuggestOpen.value = suggestResults.value.length > 0
+}
+
+function splitStreetAndHouse(value: string) {
   const normalized = normalizeAddressLabel(value)
   const match = normalized.match(/^(.*?),(?:\s*)дом\s+(.+)$/i)
 
@@ -266,19 +320,20 @@ const splitStreetAndHouse = (value: string) => {
   }
 }
 
-const toOrderAddress = (): CheckoutAddress => {
+function toOrderAddress(): CheckoutAddress {
   const { street, house } = splitStreetAndHouse(form.street)
 
   return {
     city: 'Казань',
     street,
     house: [house, form.block.trim()].filter(Boolean).join(', корп. '),
+    is_private_house: form.privateHouse,
     apartment: form.privateHouse ? null : form.apartment.trim() || null,
     entrance: form.entrance.trim() || null,
     floor: form.floor.trim() || null,
     comment: form.note.trim() || null,
-    lat: addressCoordinates.value?.[1] ?? null,
-    lng: addressCoordinates.value?.[0] ?? null,
+    lat: addressCoordinates.value?.[0] ?? null,
+    lng: addressCoordinates.value?.[1] ?? null,
     label: form.street.trim(),
     intercom: form.intercom.trim() || null,
     privateHouse: form.privateHouse,
@@ -286,162 +341,271 @@ const toOrderAddress = (): CheckoutAddress => {
   }
 }
 
-const fillFormFromAddress = (address?: CheckoutAddress | null) => {
+function fillFormFromAddress(address?: CheckoutAddress | null) {
   form.street = address?.label || [address?.street, address?.house].filter(Boolean).join(', ')
   form.block = ''
   form.entrance = address?.entrance || ''
   form.intercom = address?.intercom || ''
   form.floor = address?.floor || ''
   form.apartment = address?.apartment || ''
-  form.privateHouse = Boolean(address?.privateHouse)
+  form.privateHouse = Boolean(address?.privateHouse ?? address?.is_private_house)
   form.note = address?.comment || ''
   form.saveAddress = Boolean(address?.saveAddress)
+
   addressCoordinates.value =
-    address?.lng != null && address.lat != null ? [address.lng, address.lat] : null
+    address?.lat != null && address.lng != null ? [address.lat, address.lng] : null
   selectedAddressLabel.value = form.street
-
-  if (addressCoordinates.value && placemark) {
-    updatePlacemark(addressCoordinates.value, form.street)
-    map?.setCenter(addressCoordinates.value, 16, { duration: 0 })
-  }
+  suggestResults.value = []
+  hideSuggests()
+  addressLookupError.value = ''
+  updateDeliveryStatus('', 'neutral')
+  isInDeliveryZone.value = null
 }
 
-const reverseGeocode = async (coordinates: [number, number]) => {
-  if (!ymaps) return
+function setMarker(latLon: [number, number], text: string, inZone: boolean) {
+  if (!map || !maplibre) return
+
+  const lngLat: [number, number] = [latLon[1], latLon[0]]
+
+  userMarker?.remove()
+  userMarker = new maplibre.Marker({
+    color: inZone ? '#2fb267' : '#d45b5b',
+    draggable: true,
+  })
+    .setLngLat(lngLat)
+    .setPopup(new maplibre.Popup().setHTML(`<b>${escapeHtml(text)}</b>`))
+    .addTo(map)
+
+  userMarker.on('dragend', (event) => {
+    const nextPosition = event.target.getLngLat()
+    void handleMapPick([nextPosition.lat, nextPosition.lng])
+  })
+}
+
+async function processResolvedAddress(
+  latLon: [number, number],
+  address: string,
+  options: { flyTo?: boolean } = {},
+) {
+  const { flyTo = true } = options
 
   isGeocoding.value = true
   addressLookupError.value = ''
 
   try {
-    const result = await ymaps.geocode(coordinates, {
-      boundedBy: KAZAN_BOUNDS,
-      kind: 'house',
-      results: 1,
-      strictBounds: true,
-    })
-    const firstGeoObject = result.geoObjects.get(0)
+    const zone = await geoApi.checkDeliveryZone(latLon[0], latLon[1])
+    const normalizedAddress = normalizeAddressLabel(address)
 
-    if (!firstGeoObject) {
-      throw new Error('Адрес не найден в пределах Казани.')
+    addressCoordinates.value = latLon
+    form.street = normalizedAddress
+    selectedAddressLabel.value = normalizedAddress
+    isInDeliveryZone.value = zone.in_zone
+
+    if (flyTo && map) {
+      map.flyTo({ center: [latLon[1], latLon[0]], zoom: 17 })
     }
 
-    const address =
-      firstGeoObject.getAddressLine?.() ??
-      [
-        firstGeoObject.getLocalities?.()?.[0],
-        firstGeoObject.getThoroughfare?.(),
-        firstGeoObject.getPremiseNumber?.(),
-      ]
-        .filter(Boolean)
-        .join(', ')
-
-    if (!address) {
-      throw new Error('Не удалось определить адрес.')
+    if (zone.in_zone) {
+      updateDeliveryStatus('Доставка возможна', 'success')
+      setMarker(latLon, normalizedAddress, true)
+      return
     }
 
-    applySelectedAddress(address, coordinates)
+    updateDeliveryStatus('Адрес вне зоны доставки', 'error')
+    setMarker(latLon, 'Вне зоны доставки', false)
   } catch (error) {
+    isInDeliveryZone.value = null
     addressLookupError.value =
-      error instanceof Error ? error.message : 'Не удалось определить адрес по точке на карте.'
+      error instanceof Error ? error.message : 'Не удалось проверить зону доставки.'
   } finally {
     isGeocoding.value = false
   }
 }
 
-const searchAddress = async () => {
-  if (!ymaps || !form.street.trim() || isGeocoding.value) return
+async function handleMapPick(latLon: [number, number]) {
+  hideSuggests()
 
+  try {
+    const response = await geoApi.reverseGeocode(latLon[0], latLon[1])
+    await processResolvedAddress(latLon, response.address || 'Точка на карте', { flyTo: false })
+  } catch {
+    await processResolvedAddress(latLon, 'Точка на карте', { flyTo: false })
+  }
+}
+
+async function searchAddress() {
+  const query = form.street.trim()
+
+  if (!query || isGeocoding.value) return
+
+  hideSuggests()
   isGeocoding.value = true
   addressLookupError.value = ''
 
   try {
-    const query = form.street.toLowerCase().includes('казань')
-      ? form.street
-      : `Казань, ${form.street}`
+    const response = await geoApi.searchAddress(query)
 
-    const result = await ymaps.geocode(query, {
-      boundedBy: KAZAN_BOUNDS,
-      results: 1,
-      strictBounds: true,
-    })
-    const firstGeoObject = result.geoObjects.get(0)
-
-    if (!firstGeoObject) {
-      throw new Error('Не нашли такой адрес в Казани.')
+    if (!response.success || !response.coords?.length) {
+      throw new Error(response.message || 'Не нашли такой адрес в Казани.')
     }
 
-    const coordinates = firstGeoObject.geometry.getCoordinates()
-    const address = firstGeoObject.getAddressLine?.() ?? query
+    const [lat, lon] = response.coords
 
-    applySelectedAddress(address, coordinates)
+    if (lat == null || lon == null) {
+      throw new Error(response.message || 'Не удалось определить координаты адреса.')
+    }
+
+    await processResolvedAddress([lat, lon], response.address || query)
   } catch (error) {
-    addressLookupError.value = error instanceof Error ? error.message : 'Не удалось найти адрес.'
-  } finally {
     isGeocoding.value = false
+    addressLookupError.value = error instanceof Error ? error.message : 'Не удалось найти адрес.'
   }
 }
 
-const initMap = async () => {
-  if (map || !mapElement.value) return
-  if (!YANDEX_MAPS_API_KEY) {
-    mapError.value = 'Карта недоступна без API-ключа Яндекс.Карт.'
+async function fetchSuggests(query: string) {
+  if (query.length < 3) {
+    suggestResults.value = []
+    hideSuggests()
     return
   }
+
+  const currentRequestId = ++suggestRequestId
+  isSuggestLoading.value = true
+
+  try {
+    const response = await geoApi.suggestAddresses(query)
+
+    if (currentRequestId !== suggestRequestId) return
+
+    suggestResults.value = response.success ? response.results ?? [] : []
+
+    if (suggestResults.value.length) {
+      showSuggests()
+    } else {
+      hideSuggests()
+    }
+  } catch {
+    if (currentRequestId !== suggestRequestId) return
+
+    suggestResults.value = []
+    hideSuggests()
+  } finally {
+    if (currentRequestId === suggestRequestId) {
+      isSuggestLoading.value = false
+    }
+  }
+}
+
+function scheduleSuggest(query: string) {
+  if (suggestTimer) {
+    clearTimeout(suggestTimer)
+  }
+
+  suggestTimer = setTimeout(() => {
+    void fetchSuggests(query)
+  }, 400)
+}
+
+function handleStreetInput() {
+  updateDeliveryStatus('', 'neutral')
+  isInDeliveryZone.value = null
+  scheduleSuggest(form.street.trim())
+}
+
+function handleStreetFocus() {
+  if (suggestResults.value.length) {
+    showSuggests()
+  }
+}
+
+async function selectSuggest(item: SuggestItem) {
+  form.street = item.address
+  hideSuggests()
+
+  const [lat, lon] = item.coords
+
+  if (lat == null || lon == null) return
+
+  await processResolvedAddress([lat, lon], item.address)
+}
+
+async function initMap() {
+  if (map || !mapElement.value) return
 
   isMapLoading.value = true
   mapError.value = ''
 
   try {
-    ymaps = await loadYandexMapsApi(YANDEX_MAPS_API_KEY)
+    maplibre = await loadMapLibre()
 
-    map = new ymaps.Map(
-      mapElement.value,
-      {
-        center: KAZAN_CENTER,
-        zoom: 12,
-        controls: ['zoomControl', 'fullscreenControl'],
-      },
-      {
-        suppressMapOpenBlock: true,
-      },
-    )
-
-    placemark = new ymaps.Placemark(
-      KAZAN_CENTER,
-      {
-        iconCaption: normalizeAddressLabel(form.street),
-        hintContent: 'Выбранный адрес',
-      },
-      {
-        draggable: true,
-        preset: 'islands#redDotIconWithCaption',
-      },
-    )
-
-    map.geoObjects.add(placemark)
-
-    map.events.add('click', (event) => {
-      void reverseGeocode(event.get('coords'))
+    map = new maplibre.Map({
+      container: mapElement.value,
+      style: createOpenStreetMapStyle(),
+      center: KAZAN_CENTER,
+      zoom: KAZAN_ZOOM,
     })
 
-    placemark.events.add('dragend', () => {
-      const coordinates = placemark?.geometry.getCoordinates()
+    map.addControl(new maplibre.NavigationControl())
 
-      if (coordinates) {
-        void reverseGeocode(coordinates)
+    map.on('load', () => {
+      if (!map) return
+
+      if (!map.getSource(DELIVERY_ZONES_SOURCE_ID)) {
+        map.addSource(DELIVERY_ZONES_SOURCE_ID, {
+          type: 'geojson',
+          data: '/static/data.geojson',
+        })
+
+        map.addLayer({
+          id: 'zones-layer',
+          type: 'fill',
+          source: DELIVERY_ZONES_SOURCE_ID,
+          paint: {
+            'fill-color': '#32cd32',
+            'fill-opacity': 0.18,
+          },
+        })
+
+        map.addLayer({
+          id: 'zones-outline',
+          type: 'line',
+          source: DELIVERY_ZONES_SOURCE_ID,
+          paint: {
+            'line-color': '#32cd32',
+            'line-width': 2,
+            'line-opacity': 0.65,
+          },
+        })
       }
     })
 
-    await reverseGeocode(KAZAN_CENTER)
+    map.on('click', (event) => {
+      void handleMapPick([event.lngLat.lat, event.lngLat.lng])
+    })
   } catch (error) {
     mapError.value =
-      error instanceof Error ? error.message : 'Не удалось инициализировать Яндекс.Карты.'
+      error instanceof Error ? error.message : 'Не удалось инициализировать карту.'
   } finally {
     isMapLoading.value = false
   }
 }
 
-const confirmAddress = () => {
+async function syncInitialSelection() {
+  if (!props.initialAddress) return
+
+  if (addressCoordinates.value) {
+    const [lat, lon] = addressCoordinates.value
+    await processResolvedAddress([lat, lon], form.street || selectedAddressLabel.value, {
+      flyTo: true,
+    })
+  } else if (form.street.trim()) {
+    await searchAddress()
+  }
+}
+
+function confirmAddress() {
+  if (isConfirmDisabled.value) return
+
   emit('confirm', toOrderAddress())
   emit('update:modelValue', false)
 }
@@ -454,19 +618,47 @@ watch(
     await nextTick()
     fillFormFromAddress(props.initialAddress)
     await initMap()
-    map?.container?.fitToViewport?.()
+    map?.resize()
+    await syncInitialSelection()
   },
   { immediate: true },
 )
 
+watch(
+  () => props.initialAddress,
+  (nextAddress) => {
+    if (!props.modelValue) return
+
+    fillFormFromAddress(nextAddress)
+  },
+)
+
+function handleDocumentClick(event: MouseEvent) {
+  const target = event.target
+
+  if (!(target instanceof Node)) return
+  if (suggestContainerRef.value?.contains(target)) return
+
+  hideSuggests()
+}
+
+document.addEventListener('click', handleDocumentClick)
+
 onBeforeUnmount(() => {
-  map?.destroy()
+  if (suggestTimer) {
+    clearTimeout(suggestTimer)
+    suggestTimer = null
+  }
+
+  document.removeEventListener('click', handleDocumentClick)
+  userMarker?.remove()
+  map?.remove()
 })
 </script>
 
 <style lang="scss">
 .address-popup__modal {
-  width: min(1050px, calc(100vw - 40px));
+  width: min(1120px, calc(100vw - 40px));
   max-height: min(760px, calc(100vh - 40px));
   padding: 0;
   border-radius: 18px;
@@ -478,7 +670,7 @@ onBeforeUnmount(() => {
 .address-popup {
   position: relative;
   display: grid;
-  grid-template-columns: 460px minmax(0, 1fr);
+  grid-template-columns: 440px minmax(0, 1fr);
   color: #f1eced;
   min-height: 620px;
 }
@@ -505,6 +697,7 @@ onBeforeUnmount(() => {
   padding: 20px;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   background: #0e0d10;
+  overflow-y: auto;
 }
 
 .address-popup__tabs {
@@ -550,6 +743,36 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
+.address-popup__suggest-container {
+  position: relative;
+}
+
+.address-popup__suggest-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #19171c;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+  z-index: 3;
+}
+
+.address-popup__suggest-item {
+  padding: 12px 14px;
+  text-align: left;
+  color: #f1eced;
+  transition: background-color 0.2s ease;
+}
+
+.address-popup__suggest-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .address-popup__search {
   min-width: 112px;
   height: 50px;
@@ -560,7 +783,8 @@ onBeforeUnmount(() => {
   color: #fff;
 }
 
-.address-popup__search:disabled {
+.address-popup__search:disabled,
+.address-popup__submit:disabled {
   opacity: 0.55;
 }
 
@@ -573,6 +797,10 @@ onBeforeUnmount(() => {
 
 .address-popup__hint--error {
   color: #f2a6a6;
+}
+
+.address-popup__hint--success {
+  color: #9ee0ad;
 }
 
 .address-popup__grid {
@@ -600,7 +828,7 @@ onBeforeUnmount(() => {
 }
 
 .address-popup__checkbox-row {
-  height: 34px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -632,10 +860,6 @@ onBeforeUnmount(() => {
   background: var(--accent-button-bg);
   font-size: 22px;
   font-weight: 600;
-}
-
-.address-popup__submit:disabled {
-  opacity: 0.55;
 }
 
 .address-popup__pickup-text {
@@ -688,6 +912,7 @@ onBeforeUnmount(() => {
 .address-popup__map-shell {
   position: relative;
   flex: 1;
+  min-height: 420px;
 }
 
 .address-popup__map {
@@ -762,10 +987,7 @@ onBeforeUnmount(() => {
     font-size: 24px;
   }
 
-  .address-popup__grid {
-    grid-template-columns: 1fr;
-  }
-
+  .address-popup__grid,
   .address-popup__address-row {
     grid-template-columns: 1fr;
   }

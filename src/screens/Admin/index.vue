@@ -18,6 +18,7 @@
 
       <AdminOrdersTab
         v-if="activeTab === 'orders'"
+        :all-orders="allSortedOrders"
         :sorted-orders="sortedOrders"
         :orders-error="ordersError"
         :orders-filter="ordersFilter"
@@ -167,6 +168,14 @@ const categoryOptions = computed<CategoryOption[]>(() =>
 )
 
 const sortedOrders = computed(() =>
+  [...adminOrders.value]
+    .filter((order) => !ordersFilter.value || order.status === ordersFilter.value)
+    .sort(
+      (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+    ),
+)
+
+const allSortedOrders = computed(() =>
   [...adminOrders.value].sort(
     (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
   ),
@@ -258,7 +267,7 @@ function createEmptyVariantDraft(): ProductVariantDraft {
   return {
     id: `variant-${productVariantDraftId}`,
     name: '',
-    quantity_value: '',
+    weight: '',
     price: '',
   }
 }
@@ -318,7 +327,7 @@ function fillProductForm(product: ProductRead) {
     ? product.variants.map((variant) => ({
         id: `variant-${variant.id}`,
         name: variant.name,
-        quantity_value: String(variant.quantity_value),
+        weight: variant.weight ?? '',
         price: String(variant.price),
       }))
     : [createEmptyVariantDraft()]
@@ -364,29 +373,23 @@ function showProductList() {
 
 function parseVariants(): ProductVariantCreate[] | undefined {
   const filledVariants = variants.value.filter((variant) =>
-    [variant.name, variant.quantity_value, variant.price].some((value) => value.trim()),
+    [variant.name, variant.weight, variant.price].some((value) => value.trim()),
   )
 
   if (!filledVariants.length) return undefined
 
   return filledVariants.map((variant) => {
     const name = variant.name.trim()
-    const quantityValue = variant.quantity_value.trim()
+    const weight = variant.weight.trim()
     const price = variant.price.trim()
 
-    if (!name || !quantityValue || !price) {
+    if (!name || !weight || !price) {
       throw new Error('Заполните вариант целиком: название, вес или объём и цену')
-    }
-
-    const parsedQuantity = Number(quantityValue)
-
-    if (!Number.isFinite(parsedQuantity)) {
-      throw new Error('Вес или объём варианта должен быть числом')
     }
 
     return {
       name,
-      quantity_value: parsedQuantity,
+      weight,
       price,
     }
   })
@@ -444,7 +447,7 @@ async function loadOrders() {
   ordersError.value = ''
 
   try {
-    await adminStore.fetchOrders(ordersFilter.value || null)
+    await adminStore.fetchOrders()
   } catch (error) {
     ordersError.value =
       error instanceof Error ? error.message : 'Не удалось загрузить заказы для админки.'
@@ -453,7 +456,6 @@ async function loadOrders() {
 
 async function applyOrdersFilter(nextFilter: string) {
   ordersFilter.value = nextFilter
-  await loadOrders()
 }
 
 async function loadAdminData() {

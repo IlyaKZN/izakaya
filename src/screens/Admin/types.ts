@@ -26,7 +26,7 @@ export type ProductFormState = {
 export type ProductVariantDraft = {
   id: string
   name: string
-  quantity_value: string
+  weight: string
   price: string
 }
 

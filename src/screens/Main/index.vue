@@ -11,6 +11,12 @@
     </div>
 
     <template v-else-if="sections.length">
+      <HeroCarousel
+        v-if="heroProducts.length"
+        class="main-screen__hero-carousel"
+        :products="heroProducts"
+      />
+
       <CategoryPreviewList
         v-for="section in sections"
         :key="section.title"
@@ -32,8 +38,10 @@
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import CategoryPreviewList from '@/components/CategoryPreviewList'
+import HeroCarousel from '@/components/HeroCarousel'
 import { useCatalogStore } from '@/stores/catalog'
 import { getCategoryAnchor } from '@/utils/categoryAnchors'
+import { getProductImage } from '@/utils/products'
 import { getProductCategoryLabel } from '@/utils/products'
 
 defineOptions({
@@ -55,6 +63,19 @@ const sections = computed(() => {
     }))
     .filter((section) => section.items.length > 0)
 })
+
+const heroProducts = computed(() => {
+  const seenImages = new Set<string>()
+
+  return filteredMenuList.value.filter((product) => {
+    const image = getProductImage(product)
+
+    if (!image || seenImages.has(image)) return false
+
+    seenImages.add(image)
+    return true
+  })
+})
 </script>
 
 <style lang="scss">
@@ -67,6 +88,10 @@ const sections = computed(() => {
 
 .main-screen__category-preview-list {
   margin-bottom: 0;
+  scroll-margin-top: calc(var(--app-header-height) + 16px);
+}
+
+.main-screen__hero-carousel {
   scroll-margin-top: calc(var(--app-header-height) + 16px);
 }
 
