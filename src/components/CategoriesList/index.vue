@@ -5,7 +5,6 @@
       :key="category"
       type="button"
       class="categories-list__item"
-      :class="{ 'categories-list__item--active': selectedCategory === category }"
       @click="handleCategoryClick(category)"
     >
       {{ category }}
@@ -26,15 +25,13 @@ defineOptions({
 
 const catalogStore = useCatalogStore()
 const router = useRouter()
-const { categories, selectedCategory } = storeToRefs(catalogStore)
+const { categories } = storeToRefs(catalogStore)
 
 onMounted(() => {
   void catalogStore.loadCatalog().catch(() => undefined)
 })
 
 function handleCategoryClick(category: string) {
-  selectedCategory.value = category
-
   router.push({
     name: 'main',
     hash: `#${getCategoryAnchor(category)}`,
@@ -74,12 +71,6 @@ function handleCategoryClick(category: string) {
     border-color: rgba(255, 255, 255, 0.08);
     color: #fff;
   }
-}
-
-.categories-list__item--active {
-  background: var(--accent-soft);
-  border-color: var(--accent-soft-border);
-  color: #fff;
 }
 
 @media (max-width: 900px) {

@@ -28,7 +28,7 @@
       <main class="app_main-content">
         <RouterView v-slot="{ Component, route }">
           <Transition :name="String(route.meta.transition ?? 'page-slide')" mode="out-in">
-            <component :is="Component" :key="route.fullPath" class="router" />
+            <component :is="Component" :key="getRouteViewKey(route)" class="router" />
           </Transition>
         </RouterView>
       </main>
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
+import { useRoute, type RouteLocationNormalizedLoaded } from 'vue-router'
 import TheHeader from './components/TheHeader'
 import TheCart from './components/Cart'
 import CategoriesList from './components/CategoriesList'
@@ -57,6 +57,9 @@ const { isAuthenticated } = storeToRefs(authStore)
 const isWideLayout = computed(() => Boolean(route.meta.wideLayout))
 const isAdminRoute = computed(() => Boolean(route.meta.requiresAdmin))
 const isAdminHeaderVisible = ref(false)
+
+const getRouteViewKey = (routeLocation: RouteLocationNormalizedLoaded) =>
+  `${routeLocation.path}:${JSON.stringify(routeLocation.query)}`
 
 const syncProfile = async () => {
   if (!isAuthenticated.value) {
@@ -91,7 +94,7 @@ watch(
 
 <style lang="scss">
 .app {
-  --app-header-height: 132px;
+  --app-header-height: 104px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -195,7 +198,7 @@ watch(
 
 @media (max-width: 1280px) {
   .app {
-    --app-header-height: 184px;
+    --app-header-height: 146px;
   }
 
   .router-container {
@@ -216,7 +219,7 @@ watch(
 
 @media (max-width: 900px) {
   .app {
-    --app-header-height: 268px;
+    --app-header-height: 228px;
   }
 
   .router-container {

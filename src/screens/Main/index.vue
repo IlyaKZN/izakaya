@@ -11,11 +11,7 @@
     </div>
 
     <template v-else-if="sections.length">
-      <HeroCarousel
-        v-if="heroProducts.length"
-        class="main-screen__hero-carousel"
-        :products="heroProducts"
-      />
+      <HeroCarousel class="main-screen__hero-carousel" :images="carouselImages" />
 
       <CategoryPreviewList
         v-for="section in sections"
@@ -40,8 +36,8 @@ import { storeToRefs } from 'pinia'
 import CategoryPreviewList from '@/components/CategoryPreviewList'
 import HeroCarousel from '@/components/HeroCarousel'
 import { useCatalogStore } from '@/stores/catalog'
+import { useSiteStore } from '@/stores/site'
 import { getCategoryAnchor } from '@/utils/categoryAnchors'
-import { getProductImage } from '@/utils/products'
 import { getProductCategoryLabel } from '@/utils/products'
 
 defineOptions({
@@ -49,10 +45,13 @@ defineOptions({
 })
 
 const catalogStore = useCatalogStore()
+const siteStore = useSiteStore()
 const { filteredMenuList, categories, isLoading, errorMessage } = storeToRefs(catalogStore)
+const { carouselImages } = storeToRefs(siteStore)
 
 onMounted(() => {
   void catalogStore.loadCatalog().catch(() => undefined)
+  void siteStore.fetchCarouselImages().catch(() => undefined)
 })
 
 const sections = computed(() => {
@@ -62,19 +61,6 @@ const sections = computed(() => {
       items: filteredMenuList.value.filter((item) => getProductCategoryLabel(item) === category),
     }))
     .filter((section) => section.items.length > 0)
-})
-
-const heroProducts = computed(() => {
-  const seenImages = new Set<string>()
-
-  return filteredMenuList.value.filter((product) => {
-    const image = getProductImage(product)
-
-    if (!image || seenImages.has(image)) return false
-
-    seenImages.add(image)
-    return true
-  })
 })
 </script>
 
@@ -88,10 +74,11 @@ const heroProducts = computed(() => {
 
 .main-screen__category-preview-list {
   margin-bottom: 0;
-  scroll-margin-top: calc(var(--app-header-height) + 16px);
+  scroll-margin-top: calc(var(--app-header-height) + 168px);
 }
 
 .main-screen__hero-carousel {
+  margin-bottom: 8px;
   scroll-margin-top: calc(var(--app-header-height) + 16px);
 }
 

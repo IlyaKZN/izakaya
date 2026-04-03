@@ -19,14 +19,13 @@ const router = createRouter({
     if (to.hash) {
       return {
         el: to.hash,
-        behavior: 'smooth',
+        top: 144,
       }
     }
 
     if (to.path !== from.path) {
       return {
         top: 0,
-        behavior: 'smooth',
       }
     }
 

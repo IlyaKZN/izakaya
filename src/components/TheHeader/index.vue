@@ -69,20 +69,6 @@
                 <span class="material-symbols">account_circle</span>
                 <span>Профиль</span>
               </RouterLink>
-
-              <div class="header__profile-meta">
-                <span class="header__profile-name">{{ profileName }}</span>
-                <span class="header__profile-phone">{{ profilePhone }}</span>
-              </div>
-
-              <button
-                type="button"
-                class="header__logout-button"
-                :disabled="isLoggingOut"
-                @click="handleLogout"
-              >
-                {{ isLoggingOut ? 'Выходим...' : 'Выйти' }}
-              </button>
             </div>
           </div>
         </div>
@@ -94,13 +80,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import { useCatalogStore } from '@/stores/catalog'
 import AuthPopup from '@/components/AuthPopup'
 import { useAuthStore } from '@/stores/auth'
-import { useUsersStore } from '@/stores/users'
 
 defineOptions({
   name: 'TheHeader',
@@ -109,26 +94,9 @@ defineOptions({
 const catalogStore = useCatalogStore()
 const { searchQuery } = storeToRefs(catalogStore)
 const authStore = useAuthStore()
-const usersStore = useUsersStore()
 const { isAuthenticated, role } = storeToRefs(authStore)
-const { profile } = storeToRefs(usersStore)
 
 const isAuthPopupOpen = ref(false)
-const isLoggingOut = ref(false)
-
-const profileName = computed(() => profile.value?.name || 'Пользователь')
-const profilePhone = computed(() => profile.value?.phone || 'Номер не указан')
-
-const handleLogout = async () => {
-  isLoggingOut.value = true
-
-  try {
-    await authStore.logout()
-    usersStore.clearProfile()
-  } finally {
-    isLoggingOut.value = false
-  }
-}
 </script>
 
 <style lang="scss">
@@ -143,17 +111,17 @@ const handleLogout = async () => {
 }
 
 .header__inner {
-  max-width: 1700px;
+  max-width: 1840px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 10px 28px;
 }
 
 .header__bar {
-  min-height: 78px;
+  min-height: 62px;
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 10px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -181,20 +149,20 @@ const handleLogout = async () => {
 .header__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   color: inherit;
   text-decoration: none;
 }
 
 .header__brand-badge {
-  width: 54px;
-  height: 54px;
+  width: 70px;
+  height: 70px;
   flex-shrink: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(circle at 30% 30%, rgba(127, 46, 67, 0.95), rgba(84, 29, 45, 0.96) 62%, rgba(28, 17, 22, 0.98) 100%);
@@ -207,36 +175,38 @@ const handleLogout = async () => {
 
 .header__brand-badge-top,
 .header__brand-badge-bottom {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.16em;
 }
 
 .header__brand-badge-main {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .header__brand-copy {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .header__brand-mark {
-  font-size: 21px;
-  letter-spacing: 0.08em;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.04em;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .header__brand-subtitle {
   color: rgba(200, 188, 193, 0.72);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 10px;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 .header__search {
@@ -335,11 +305,10 @@ const handleLogout = async () => {
 
 .header__nav-link,
 .header__auth-button,
-.header__logout-button,
 .header__profile-link {
-  min-height: 48px;
-  padding: 0 16px;
-  border-radius: 18px;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -347,6 +316,7 @@ const handleLogout = async () => {
   white-space: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.045);
+  text-decoration: none;
   transition:
     border-color 0.1s ease,
     background-color 0.1s ease,
@@ -355,7 +325,6 @@ const handleLogout = async () => {
 
 .header__nav-link:hover,
 .header__auth-button:hover,
-.header__logout-button:hover,
 .header__profile-link:hover {
   transform: translateY(-1px);
   border-color: rgba(127, 46, 67, 0.24);
@@ -381,44 +350,10 @@ const handleLogout = async () => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.header__logout-button {
-  background: var(--accent-button-bg);
-  border-color: var(--accent-soft-border);
-}
-
 .header__profile {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px;
-  padding-left: 8px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.header__profile-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 4px;
-  min-width: 0;
-}
-
-.header__profile-name {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.header__profile-phone {
-  color: rgba(200, 188, 193, 0.62);
-  font-size: 12px;
-}
-
-.header__auth-button:disabled,
-.header__logout-button:disabled {
-  opacity: 0.55;
 }
 
 @media (max-width: 1460px) {
@@ -464,7 +399,7 @@ const handleLogout = async () => {
   .header__bar {
     min-height: auto;
     gap: 14px;
-    padding: 12px;
+    padding: 8px 0;
   }
 
   .header__brand {
@@ -489,20 +424,6 @@ const handleLogout = async () => {
     justify-content: space-between;
   }
 
-  .header__profile {
-    max-width: 100%;
-  }
-
-  .header__profile-meta {
-    overflow: hidden;
-  }
-
-  .header__profile-name,
-  .header__profile-phone {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
 @media (max-width: 640px) {
@@ -513,7 +434,7 @@ const handleLogout = async () => {
   }
 
   .header__inner {
-    padding: 8px 12px 12px;
+    padding: 8px 12px 10px;
   }
 
   .header__bar {
@@ -528,10 +449,26 @@ const handleLogout = async () => {
     font-size: 17px;
   }
 
+  .header__brand-badge {
+    width: 58px;
+    height: 58px;
+    padding: 8px;
+  }
+
+  .header__brand-badge-top,
+  .header__brand-badge-bottom {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+
+  .header__brand-badge-main {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
   .header__nav-link,
   .header__auth-button,
-  .header__profile-link,
-  .header__logout-button {
+  .header__profile-link {
     min-height: 40px;
     padding: 0 10px;
     font-size: 13px;
@@ -563,19 +500,8 @@ const handleLogout = async () => {
     justify-content: center;
   }
 
-  .header__profile {
-    width: 100%;
-    justify-content: space-between;
-    gap: 8px;
-    padding-left: 8px;
-  }
-
   .header__auth {
     width: 100%;
-  }
-
-  .header__profile-meta {
-    flex: 1;
   }
 
   .header__nav-link span:last-child,
@@ -595,10 +521,6 @@ const handleLogout = async () => {
 
   .header__auth-button {
     width: 100%;
-  }
-
-  .header__logout-button {
-    white-space: nowrap;
   }
 }
 </style>
