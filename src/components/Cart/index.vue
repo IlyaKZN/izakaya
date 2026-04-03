@@ -48,33 +48,39 @@
           Пока пусто. Добавьте блюда из каталога.
         </div>
 
-        <div v-else class="cart__items">
-          <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
-            <CartItem :item="cartItem" />
-            <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
-          </template>
-        </div>
-
-        <div v-if="cartItemList.length" class="cart__summary">
-          <div class="cart__summary-row">
-            <span>Товары</span>
-            <span>{{ subtotal }} ₽</span>
+        <template v-else>
+          <div class="cart__items-scroll">
+            <div class="cart__items">
+              <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
+                <CartItem :item="cartItem" />
+                <div v-if="index !== cartItemList.length - 1" class="cart__separator" />
+              </template>
+            </div>
           </div>
 
-          <div class="cart__summary-row cart__summary-row--total">
-            <span>Итого</span>
-            <span>{{ totalPrice }} ₽</span>
-          </div>
-        </div>
+          <div class="cart__footer">
+            <div class="cart__summary">
+              <div class="cart__summary-row">
+                <span>Товары</span>
+                <span>{{ subtotal }} ₽</span>
+              </div>
 
-        <button
-          type="button"
-          class="cart__checkout"
-          :disabled="cartItemList.length === 0"
-          @click="goToCheckout"
-        >
-          Перейти к оформлению
-        </button>
+              <div class="cart__summary-row cart__summary-row--total">
+                <span>Итого</span>
+                <span>{{ totalPrice }} ₽</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="cart__checkout"
+              :disabled="cartItemList.length === 0"
+              @click="goToCheckout"
+            >
+              Перейти к оформлению
+            </button>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -279,6 +285,15 @@ watch(isAuthPopupOpen, (isOpen) => {
   scrollbar-gutter: stable;
 }
 
+.cart__items-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+  margin-right: -6px;
+}
+
 .cart__header {
   display: flex;
   align-items: center;
@@ -324,8 +339,17 @@ watch(isAuthPopupOpen, (isOpen) => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 6px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cart__footer {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding-top: 18px;
+  padding-bottom: 4px;
+  background: linear-gradient(180deg, rgba(24, 19, 22, 0), rgba(24, 19, 22, 0.96) 18px);
 }
 
 .cart__summary-row {
@@ -344,6 +368,7 @@ watch(isAuthPopupOpen, (isOpen) => {
   width: 100%;
   min-height: 52px;
   padding: 0 16px;
+  margin-top: 16px;
   border-radius: 16px;
   background: var(--accent-button-bg);
   color: #fff;
@@ -379,6 +404,19 @@ watch(isAuthPopupOpen, (isOpen) => {
   background: transparent;
 }
 
+.cart__items-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart__items-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.cart__items-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @media (max-width: 1280px) {
   .cart-container {
     height: auto;
@@ -403,6 +441,11 @@ watch(isAuthPopupOpen, (isOpen) => {
   .cart__scroll {
     padding: 12px;
     gap: 12px;
+  }
+
+  .cart__items-scroll {
+    padding-right: 0;
+    margin-right: 0;
   }
 
   .cart__title {
