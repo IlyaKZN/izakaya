@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
 .category-preview-list {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   padding: 0;
   border-radius: 0;
@@ -202,12 +202,12 @@ onBeforeUnmount(() => {
 }
 
 .category-preview-list__go-to-button--left {
-  left: 8px;
+  left: -24px;
   z-index: 2;
 }
 
 .category-preview-list__go-to-button--right {
-  right: 8px;
+  right: -24px;
   z-index: 2;
   transform: rotate(180deg);
 }

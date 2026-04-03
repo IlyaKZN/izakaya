@@ -22,13 +22,23 @@
 
     <div class="menu-item-card__info">
       <span @click="goToItem" class="menu-item-card__name">{{ menuItem.name }}</span>
+      <span v-if="productWeight" class="menu-item-card__weight">{{ productWeight }}</span>
 
-      <span class="menu-item-card__description">{{ menuDescription }}</span>
+      <div
+        class="menu-item-card__bottom-container"
+        :class="{ 'menu-item-card__bottom-container--select': hasMultipleVariants }"
+      >
+        <span
+          class="menu-item-card__price"
+          :class="{ 'menu-item-card__price--select': hasMultipleVariants }"
+        >
+          {{ productPrice }}
+        </span>
 
-      <div class="menu-item-card__bottom-container">
-        <span class="menu-item-card__price">{{ productPrice }}</span>
-
-        <div class="menu-item-card__buttons-container">
+        <div
+          class="menu-item-card__buttons-container"
+          :class="{ 'menu-item-card__buttons-container--select': hasMultipleVariants }"
+        >
           <FadeTransition>
             <button
               v-if="canChangeCount && cartItem"
@@ -96,9 +106,7 @@ const productPrice = computed(() =>
     ? `от ${getProductPrice(menuItem)} ₽`
     : formatProductPrice(menuItem, defaultVariant.value),
 )
-const menuDescription = computed(
-  () => menuItem.description || menuItem.category?.name || 'Без описания',
-)
+const productWeight = computed(() => defaultVariant.value?.weight || menuItem.weight || '')
 
 function handlePrimaryAction() {
   if (hasMultipleVariants.value || hasRemovableIngredients.value) {
@@ -204,7 +212,7 @@ function handleImageError(event: Event) {
   line-height: 1.25;
   font-weight: 600;
   color: white;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   cursor: pointer;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -216,15 +224,12 @@ function handleImageError(event: Event) {
   }
 }
 
-.menu-item-card__description {
+.menu-item-card__weight {
+  display: block;
+  margin-bottom: 14px;
   font-size: 13px;
-  line-height: 1.35;
+  line-height: 1.2;
   color: var(--text-secondary);
-  margin-bottom: 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .menu-item-card__price {
@@ -235,6 +240,10 @@ function handleImageError(event: Event) {
   letter-spacing: 0.2px;
   min-width: 0;
   white-space: nowrap;
+}
+
+.menu-item-card__price--select {
+  font-size: 18px;
 }
 
 .menu-item-card__button {
@@ -274,8 +283,8 @@ function handleImageError(event: Event) {
 }
 
 .menu-item-card__button--select {
-  width: auto;
-  min-width: 96px;
+  width: 100%;
+  min-width: 0;
   padding: 0 14px;
 }
 
@@ -293,6 +302,12 @@ function handleImageError(event: Event) {
   gap: 10px;
 }
 
+.menu-item-card__bottom-container--select {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 12px;
+}
+
 .menu-item-card__buttons-container {
   display: flex;
   align-items: center;
@@ -301,6 +316,12 @@ function handleImageError(event: Event) {
   border-radius: 18px;
   background: rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
+}
+
+.menu-item-card__buttons-container--select {
+  width: 100%;
+  padding: 0;
+  background: transparent;
 }
 
 .menu-item-card__count {
