@@ -28,7 +28,8 @@ export type MapLibreMap = {
   addControl: (control: unknown) => void
   addLayer: (layer: Record<string, unknown>) => void
   addSource: (id: string, source: Record<string, unknown>) => void
-  flyTo: (options: { center: LngLat; zoom?: number }) => void
+  flyTo: (options: { center: LngLat; zoom?: number; pitch?: number }) => void
+  getLayer: (id: string) => unknown
   getSource: (id: string) => unknown
   on: {
     (event: 'load', handler: () => void): void
@@ -36,14 +37,18 @@ export type MapLibreMap = {
   }
   remove: () => void
   resize: () => void
+  setPaintProperty: (layerId: string, name: string, value: unknown) => void
 }
 
 export type MapLibreApi = {
   Map: new (options: {
     container: HTMLElement
-    style: Record<string, unknown>
+    style: string | Record<string, unknown>
     center: LngLat
     zoom: number
+    pitch?: number
+    maxZoom?: number
+    antialias?: boolean
   }) => MapLibreMap
   Marker: new (options?: { color?: string; draggable?: boolean }) => MapLibreMarker
   Popup: new () => MapLibrePopup
@@ -59,8 +64,11 @@ declare global {
 let loaderPromise: Promise<MapLibreApi> | null = null
 
 export const KAZAN_CENTER: LngLat = [49.11, 55.794]
-export const KAZAN_ZOOM = 11
+export const KAZAN_ZOOM = 14
 export const DELIVERY_ZONES_SOURCE_ID = 'delivery-zones'
+export const DEFAULT_MAP_PITCH = 0
+export const DEFAULT_MAP_MAX_ZOOM = 18
+export const MAPTILER_API_KEY = import.meta.env.VITE_MAPTILER_API_KEY || 'JD5XQRl5RxcWZzCUU4Pi'
 
 export const normalizeAddressLabel = (value: string) =>
   value
@@ -137,21 +145,5 @@ export async function loadMapLibre() {
 }
 
 export function createOpenStreetMapStyle() {
-  return {
-    version: 8,
-    sources: {
-      'raster-tiles': {
-        type: 'raster',
-        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-        tileSize: 256,
-      },
-    },
-    layers: [
-      {
-        id: 'simple-tiles',
-        type: 'raster',
-        source: 'raster-tiles',
-      },
-    ],
-  }
+  return `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_API_KEY}`
 }

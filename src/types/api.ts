@@ -50,9 +50,7 @@ export type AddressCreate = {
   apartment?: string | null
   entrance?: string | null
   floor?: string | null
-  comment?: string | null
-  lat?: number | null
-  lng?: number | null
+  coords?: number[] | null
 }
 
 export type AddressRead = {
@@ -64,8 +62,7 @@ export type AddressRead = {
   entrance?: string | null
   floor?: string | null
   comment?: string | null
-  lat?: number | null
-  lng?: number | null
+  coords?: number[] | null
   id: Uuid
   user_id: Uuid
   created_at: string
@@ -156,9 +153,7 @@ export type OrderAddressInput = {
   apartment?: string | null
   entrance?: string | null
   floor?: string | null
-  comment?: string | null
-  lat?: number | null
-  lng?: number | null
+  coords?: number[] | null
 }
 
 export type OrderItemCreateInput = {
@@ -273,7 +268,9 @@ export type CarouselImageRead = {
 }
 
 export type SuggestItem = {
-  address: string
+  name?: string | null
+  street: string
+  house: string
   coords: number[]
 }
 
@@ -286,14 +283,14 @@ export type SuggestResponse = {
 export type SearchResponse = {
   success: boolean
   coords?: number[] | null
-  address?: string | null
-  source?: string | null
+  street?: string | null
+  house?: string | null
   message?: string | null
 }
 
 export type ReverseResponse = {
   success: boolean
-  address?: string | null
+  coords?: number[] | null
   city?: string | null
   street?: string | null
   house?: string | null

@@ -15,9 +15,9 @@ export function searchAddress(query: string) {
 }
 
 export function reverseGeocode(lat: number, lon: number) {
-  return getRequest<ReverseResponse>('/api/v1/geo/reverse', { lat, lon })
+  return getRequest<ReverseResponse>('/api/v1/geo/reverse', { coords: `${lat},${lon}` })
 }
 
 export function checkDeliveryZone(lat: number, lon: number) {
-  return getRequest<CheckZoneResponse>('/api/v1/geo/check-zone', { lat, lon })
+  return getRequest<CheckZoneResponse>('/api/v1/geo/check-zone', { coords: `${lat},${lon}` })
 }

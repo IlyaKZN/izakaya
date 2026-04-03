@@ -1,9 +1,9 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useCartStore } from '@/stores/cart'
 import { useOrdersStore } from '@/stores/orders'
 import type { CheckoutAddress } from '@/components/AddressPopup'
-import type { UserRead } from '@/types/api'
+import type { OrderAddressInput, UserRead } from '@/types/api'
 import { getProductPrice } from '@/utils/products'
 
 export type TOrderMode = 'delivery' | 'pickup'
@@ -11,6 +11,19 @@ export type TOrderMode = 'delivery' | 'pickup'
 const PROMO_DISCOUNTS: Record<string, number> = {
   PHO10: 10,
   VIET5: 5,
+}
+
+const CHECKOUT_STORAGE_KEY = 'izakaya-checkout'
+
+type PersistedCheckoutState = {
+  selectedAddress: CheckoutAddress | null
+  orderMode: TOrderMode
+  recipientPhone: string
+  persons: number
+  paymentMethod: 'cash' | 'card' | 'online'
+  orderComment: string
+  promoCode: string
+  useBonuses: boolean
 }
 
 export const useCheckoutStore = defineStore('checkout', () => {
@@ -76,6 +89,72 @@ export const useCheckoutStore = defineStore('checkout', () => {
         (!selectedAddress.value || subtotal.value < minDeliveryOrder)),
   )
 
+  function isCheckoutAddress(value: unknown): value is CheckoutAddress {
+    if (!value || typeof value !== 'object') return false
+
+    const address = value as Partial<CheckoutAddress>
+
+    return (
+      typeof address.street === 'string' &&
+      typeof address.house === 'string' &&
+      typeof address.label === 'string'
+    )
+  }
+
+  function hydrateCheckout() {
+    if (typeof window === 'undefined') return
+
+    const savedCheckout = window.localStorage.getItem(CHECKOUT_STORAGE_KEY)
+
+    if (!savedCheckout) return
+
+    try {
+      const parsedCheckout = JSON.parse(savedCheckout) as Partial<PersistedCheckoutState>
+
+      selectedAddress.value = isCheckoutAddress(parsedCheckout.selectedAddress)
+        ? parsedCheckout.selectedAddress
+        : null
+      orderMode.value =
+        parsedCheckout.orderMode === 'pickup' || parsedCheckout.orderMode === 'delivery'
+          ? parsedCheckout.orderMode
+          : 'delivery'
+      recipientPhone.value = typeof parsedCheckout.recipientPhone === 'string' ? parsedCheckout.recipientPhone : ''
+      persons.value =
+        typeof parsedCheckout.persons === 'number' && parsedCheckout.persons >= 1
+          ? Math.min(parsedCheckout.persons, 20)
+          : 1
+      paymentMethod.value =
+        parsedCheckout.paymentMethod === 'card' ||
+        parsedCheckout.paymentMethod === 'online' ||
+        parsedCheckout.paymentMethod === 'cash'
+          ? parsedCheckout.paymentMethod
+          : 'cash'
+      orderComment.value = typeof parsedCheckout.orderComment === 'string' ? parsedCheckout.orderComment : ''
+      promoCode.value = typeof parsedCheckout.promoCode === 'string' ? parsedCheckout.promoCode : ''
+      useBonuses.value = Boolean(parsedCheckout.useBonuses)
+      applyPromoCode()
+    } catch {
+      window.localStorage.removeItem(CHECKOUT_STORAGE_KEY)
+    }
+  }
+
+  function persistCheckout() {
+    if (typeof window === 'undefined') return
+
+    const payload: PersistedCheckoutState = {
+      selectedAddress: selectedAddress.value,
+      orderMode: orderMode.value,
+      recipientPhone: recipientPhone.value,
+      persons: persons.value,
+      paymentMethod: paymentMethod.value,
+      orderComment: orderComment.value,
+      promoCode: promoCode.value,
+      useBonuses: useBonuses.value,
+    }
+
+    window.localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(payload))
+  }
+
   function normalizePhone(phone: string) {
     const digits = phone.replace(/\D/g, '')
 
@@ -106,6 +185,20 @@ export const useCheckoutStore = defineStore('checkout', () => {
     }
 
     return commentParts.filter(Boolean).join('. ') || null
+  }
+
+  function toOrderAddressPayload(address: CheckoutAddress | null): OrderAddressInput | null {
+    if (!address) return null
+
+    return {
+      street: address.street,
+      house: address.house,
+      is_private_house: address.privateHouse ?? address.is_private_house ?? false,
+      apartment: address.apartment ?? null,
+      entrance: address.entrance ?? null,
+      floor: address.floor ?? null,
+      coords: address.coords?.length === 2 ? [...address.coords] : null,
+    }
   }
 
   function prefillFromProfile(profile: UserRead | null) {
@@ -162,7 +255,7 @@ export const useCheckoutStore = defineStore('checkout', () => {
 
     try {
       const order = await ordersStore.createOrder({
-        address: orderMode.value === 'delivery' ? selectedAddress.value : null,
+        address: orderMode.value === 'delivery' ? toOrderAddressPayload(selectedAddress.value) : null,
         recipient_phone: `+${normalizedPhone}`,
         persons: persons.value,
         payment_method: paymentMethod.value,
@@ -183,6 +276,14 @@ export const useCheckoutStore = defineStore('checkout', () => {
       isSubmittingOrder.value = false
     }
   }
+
+  hydrateCheckout()
+
+  watch(
+    [selectedAddress, orderMode, recipientPhone, persons, paymentMethod, orderComment, promoCode, useBonuses],
+    persistCheckout,
+    { deep: true },
+  )
 
   return {
     selectedAddress,

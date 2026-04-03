@@ -16,181 +16,34 @@
         <span class="material-symbols">close</span>
       </button>
 
-      <div class="address-popup__left">
-        <div class="address-popup__tabs">
-          <button
-            type="button"
-            class="address-popup__tab"
-            :class="{ 'address-popup__tab--active': activeTab === 'delivery' }"
-            @click="activeTab = 'delivery'"
-          >
-            Доставка
-          </button>
+      <AddressPopupFormPane
+        ref="formPaneRef"
+        :active-tab="activeTab"
+        :form="form"
+        :suggest-results="suggestResults"
+        :is-suggest-open="isSuggestOpen"
+        :can-search-address="canSearchAddress"
+        :is-geocoding="isGeocoding"
+        :delivery-status-message="deliveryStatusMessage"
+        :delivery-status-kind="deliveryStatusKind"
+        :address-lookup-error="addressLookupError"
+        :is-confirm-disabled="isConfirmDisabled"
+        :get-suggest-title="getSuggestTitle"
+        :get-suggest-address="getSuggestAddress"
+        @update:active-tab="activeTab = $event"
+        @street-input="handleStreetInput"
+        @street-focus="handleStreetFocus"
+        @search="searchAddress"
+        @select-suggest="selectSuggest"
+        @confirm="confirmAddress"
+      />
 
-          <button
-            type="button"
-            class="address-popup__tab"
-            :class="{ 'address-popup__tab--active': activeTab === 'pickup' }"
-            @click="activeTab = 'pickup'"
-          >
-            Самовывоз
-          </button>
-        </div>
-
-        <template v-if="activeTab === 'delivery'">
-          <h2 class="address-popup__title">Адрес доставки</h2>
-
-          <label class="address-popup__field">
-            <span class="address-popup__label">Улица и дом</span>
-
-            <div class="address-popup__address-row">
-              <div ref="suggestContainerRef" class="address-popup__suggest-container">
-                <input
-                  v-model.trim="form.street"
-                  class="address-popup__input"
-                  type="text"
-                  placeholder="Например, Баумана, 1"
-                  autocomplete="off"
-                  @input="handleStreetInput"
-                  @focus="handleStreetFocus"
-                  @keydown.enter.prevent="searchAddress"
-                />
-
-                <div v-if="isSuggestOpen" class="address-popup__suggest-list">
-                  <button
-                    v-for="item in suggestResults"
-                    :key="`${item.address}-${item.coords.join(',')}`"
-                    type="button"
-                    class="address-popup__suggest-item"
-                    @click="selectSuggest(item)"
-                  >
-                    {{ item.address }}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                class="address-popup__search"
-                :disabled="!canSearchAddress"
-                @click="searchAddress"
-              >
-                {{ isGeocoding ? 'Поиск...' : 'Найти' }}
-              </button>
-            </div>
-          </label>
-
-          <p class="address-popup__hint">
-            Начните вводить адрес, выберите подсказку или кликните по карте.
-          </p>
-          <p
-            v-if="deliveryStatusMessage"
-            class="address-popup__hint"
-            :class="{
-              'address-popup__hint--error': deliveryStatusKind === 'error',
-              'address-popup__hint--success': deliveryStatusKind === 'success',
-            }"
-          >
-            {{ deliveryStatusMessage }}
-          </p>
-          <p v-if="addressLookupError" class="address-popup__hint address-popup__hint--error">
-            {{ addressLookupError }}
-          </p>
-
-          <div class="address-popup__grid">
-            <input
-              v-model="form.block"
-              class="address-popup__input"
-              type="text"
-              placeholder="Корпус"
-            />
-            <input
-              v-model="form.entrance"
-              class="address-popup__input"
-              type="text"
-              placeholder="Подъезд"
-            />
-            <input
-              v-model="form.intercom"
-              class="address-popup__input"
-              type="text"
-              placeholder="Домофон"
-            />
-            <input
-              v-model="form.floor"
-              class="address-popup__input"
-              type="text"
-              placeholder="Этаж"
-            />
-          </div>
-
-          <label class="address-popup__field">
-            <span class="address-popup__label">Квартира</span>
-            <input v-model="form.apartment" class="address-popup__input" type="text" />
-          </label>
-
-          <label class="address-popup__checkbox-row">
-            <input v-model="form.privateHouse" type="checkbox" class="address-popup__checkbox" />
-            <span>Частный дом</span>
-          </label>
-
-          <textarea
-            v-model="form.note"
-            class="address-popup__textarea"
-            placeholder="Примечание к адресу"
-          />
-
-          <label class="address-popup__checkbox-row">
-            <input v-model="form.saveAddress" type="checkbox" class="address-popup__checkbox" />
-            <span>Сохранить адрес для будущих заказов</span>
-          </label>
-
-          <button
-            type="button"
-            class="address-popup__submit"
-            :disabled="isConfirmDisabled"
-            @click="confirmAddress"
-          >
-            Подтвердить адрес
-          </button>
-        </template>
-
-        <template v-else>
-          <h2 class="address-popup__title">Самовывоз</h2>
-          <p class="address-popup__pickup-text">
-            Выберите точку на карте справа, чтобы сориентироваться по зоне доставки.
-          </p>
-        </template>
-      </div>
-
-      <div class="address-popup__right">
-        <div class="address-popup__map-header">
-          <div>
-            <span class="address-popup__map-title">Карта Казани</span>
-            <p class="address-popup__map-subtitle">
-              {{ selectedAddressLabel || 'Выберите адрес на карте' }}
-            </p>
-          </div>
-          <span class="address-popup__map-badge">OpenStreetMap</span>
-        </div>
-
-        <div class="address-popup__map-shell">
-          <div
-            ref="mapElement"
-            class="address-popup__map"
-            :class="{ 'address-popup__map--error': !!mapError }"
-          />
-          <div v-if="isMapLoading" class="address-popup__map-overlay">
-            Загружаем карту Казани...
-          </div>
-          <div
-            v-else-if="mapError"
-            class="address-popup__map-overlay address-popup__map-overlay--error"
-          >
-            <p>{{ mapError }}</p>
-          </div>
-        </div>
-      </div>
+      <AddressPopupMapPane
+        ref="mapPaneRef"
+        :selected-address-label="selectedAddressLabel"
+        :is-map-loading="isMapLoading"
+        :map-error="mapError"
+      />
     </div>
   </BasePopup>
 </template>
@@ -199,6 +52,8 @@
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import * as geoApi from '@/api/geo'
 import BasePopup from '@/components/BasePopup'
+import AddressPopupFormPane from './AddressPopupFormPane.vue'
+import AddressPopupMapPane from './AddressPopupMapPane.vue'
 import type { SuggestItem } from '@/types/api'
 import type { CheckoutAddress } from './types'
 import {
@@ -208,6 +63,8 @@ import {
   KAZAN_ZOOM,
   loadMapLibre,
   normalizeAddressLabel,
+  DEFAULT_MAP_MAX_ZOOM,
+  DEFAULT_MAP_PITCH,
   type MapLibreApi,
   type MapLibreMap,
   type MapLibreMarker,
@@ -228,8 +85,8 @@ const emit = defineEmits<{
 }>()
 
 const activeTab = ref<'delivery' | 'pickup'>('delivery')
-const mapElement = ref<HTMLElement | null>(null)
-const suggestContainerRef = ref<HTMLElement | null>(null)
+const mapPaneRef = ref<{ mapElement: HTMLElement | null } | null>(null)
+const formPaneRef = ref<{ suggestContainer: HTMLElement | null } | null>(null)
 const isMapLoading = ref(false)
 const isGeocoding = ref(false)
 const isSuggestLoading = ref(false)
@@ -320,6 +177,18 @@ function splitStreetAndHouse(value: string) {
   }
 }
 
+function buildAddressLabel(street?: string | null, house?: string | null) {
+  return [street?.trim(), house?.trim()].filter(Boolean).join(', ').trim()
+}
+
+function getSuggestTitle(item: SuggestItem) {
+  return item.name?.trim() || item.street.trim() || 'Адрес'
+}
+
+function getSuggestAddress(item: SuggestItem) {
+  return buildAddressLabel(item.street, item.house)
+}
+
 function toOrderAddress(): CheckoutAddress {
   const { street, house } = splitStreetAndHouse(form.street)
 
@@ -331,9 +200,7 @@ function toOrderAddress(): CheckoutAddress {
     apartment: form.privateHouse ? null : form.apartment.trim() || null,
     entrance: form.entrance.trim() || null,
     floor: form.floor.trim() || null,
-    comment: form.note.trim() || null,
-    lat: addressCoordinates.value?.[0] ?? null,
-    lng: addressCoordinates.value?.[1] ?? null,
+    coords: addressCoordinates.value ? [...addressCoordinates.value] : null,
     label: form.street.trim(),
     intercom: form.intercom.trim() || null,
     privateHouse: form.privateHouse,
@@ -353,7 +220,9 @@ function fillFormFromAddress(address?: CheckoutAddress | null) {
   form.saveAddress = Boolean(address?.saveAddress)
 
   addressCoordinates.value =
-    address?.lat != null && address.lng != null ? [address.lat, address.lng] : null
+    address?.coords?.[0] != null && address.coords[1] != null
+      ? [address.coords[0], address.coords[1]]
+      : null
   selectedAddressLabel.value = form.street
   suggestResults.value = []
   hideSuggests()
@@ -369,7 +238,7 @@ function setMarker(latLon: [number, number], text: string, inZone: boolean) {
 
   userMarker?.remove()
   userMarker = new maplibre.Marker({
-    color: inZone ? '#2fb267' : '#d45b5b',
+    color: inZone ? '#8f1d3f' : '#b14b68',
     draggable: true,
   })
     .setLngLat(lngLat)
@@ -380,6 +249,13 @@ function setMarker(latLon: [number, number], text: string, inZone: boolean) {
     const nextPosition = event.target.getLngLat()
     void handleMapPick([nextPosition.lat, nextPosition.lng])
   })
+}
+
+function destroyMap() {
+  userMarker?.remove()
+  userMarker = null
+  map?.remove()
+  map = null
 }
 
 async function processResolvedAddress(
@@ -402,16 +278,16 @@ async function processResolvedAddress(
     isInDeliveryZone.value = zone.in_zone
 
     if (flyTo && map) {
-      map.flyTo({ center: [latLon[1], latLon[0]], zoom: 17 })
+      map.flyTo({ center: [latLon[1], latLon[0]], zoom: 17, pitch: 24 })
     }
 
     if (zone.in_zone) {
-      updateDeliveryStatus('Доставка возможна', 'success')
+      updateDeliveryStatus('✅ Доставка возможна!', 'success')
       setMarker(latLon, normalizedAddress, true)
       return
     }
 
-    updateDeliveryStatus('Адрес вне зоны доставки', 'error')
+    updateDeliveryStatus('❌ Вне зоны доставки', 'error')
     setMarker(latLon, 'Вне зоны доставки', false)
   } catch (error) {
     isInDeliveryZone.value = null
@@ -427,7 +303,10 @@ async function handleMapPick(latLon: [number, number]) {
 
   try {
     const response = await geoApi.reverseGeocode(latLon[0], latLon[1])
-    await processResolvedAddress(latLon, response.address || 'Точка на карте', { flyTo: false })
+    const resolvedAddress =
+      buildAddressLabel(response.street, response.house) || normalizeAddressLabel(form.street)
+
+    await processResolvedAddress(latLon, resolvedAddress || 'Точка на карте', { flyTo: false })
   } catch {
     await processResolvedAddress(latLon, 'Точка на карте', { flyTo: false })
   }
@@ -455,7 +334,8 @@ async function searchAddress() {
       throw new Error(response.message || 'Не удалось определить координаты адреса.')
     }
 
-    await processResolvedAddress([lat, lon], response.address || query)
+    const resolvedAddress = buildAddressLabel(response.street, response.house) || query
+    await processResolvedAddress([lat, lon], resolvedAddress)
   } catch (error) {
     isGeocoding.value = false
     addressLookupError.value = error instanceof Error ? error.message : 'Не удалось найти адрес.'
@@ -519,18 +399,21 @@ function handleStreetFocus() {
 }
 
 async function selectSuggest(item: SuggestItem) {
-  form.street = item.address
+  const resolvedAddress = buildAddressLabel(item.street, item.house)
+  form.street = item.name?.trim() ? `${item.name.trim()} (${resolvedAddress})` : resolvedAddress
   hideSuggests()
 
   const [lat, lon] = item.coords
 
   if (lat == null || lon == null) return
 
-  await processResolvedAddress([lat, lon], item.address)
+  await processResolvedAddress([lat, lon], resolvedAddress)
 }
 
 async function initMap() {
-  if (map || !mapElement.value) return
+  const mapElement = mapPaneRef.value?.mapElement
+
+  if (map || !mapElement) return
 
   isMapLoading.value = true
   mapError.value = ''
@@ -539,16 +422,23 @@ async function initMap() {
     maplibre = await loadMapLibre()
 
     map = new maplibre.Map({
-      container: mapElement.value,
+      container: mapElement,
       style: createOpenStreetMapStyle(),
       center: KAZAN_CENTER,
       zoom: KAZAN_ZOOM,
+      pitch: DEFAULT_MAP_PITCH,
+      maxZoom: DEFAULT_MAP_MAX_ZOOM,
+      antialias: true,
     })
 
     map.addControl(new maplibre.NavigationControl())
 
     map.on('load', () => {
       if (!map) return
+
+      if (map.getLayer('building')) {
+        map.setPaintProperty('building', 'fill-extrusion-opacity', 0.8)
+      }
 
       if (!map.getSource(DELIVERY_ZONES_SOURCE_ID)) {
         map.addSource(DELIVERY_ZONES_SOURCE_ID, {
@@ -561,7 +451,7 @@ async function initMap() {
           type: 'fill',
           source: DELIVERY_ZONES_SOURCE_ID,
           paint: {
-            'fill-color': '#32cd32',
+            'fill-color': '#8f1d3f',
             'fill-opacity': 0.18,
           },
         })
@@ -571,9 +461,9 @@ async function initMap() {
           type: 'line',
           source: DELIVERY_ZONES_SOURCE_ID,
           paint: {
-            'line-color': '#32cd32',
+            'line-color': '#d37a98',
             'line-width': 2,
-            'line-opacity': 0.65,
+            'line-opacity': 0.78,
           },
         })
       }
@@ -613,7 +503,10 @@ function confirmAddress() {
 watch(
   () => props.modelValue,
   async (isOpen) => {
-    if (!isOpen) return
+    if (!isOpen) {
+      destroyMap()
+      return
+    }
 
     await nextTick()
     fillFormFromAddress(props.initialAddress)
@@ -637,7 +530,7 @@ function handleDocumentClick(event: MouseEvent) {
   const target = event.target
 
   if (!(target instanceof Node)) return
-  if (suggestContainerRef.value?.contains(target)) return
+  if (formPaneRef.value?.suggestContainer?.contains(target)) return
 
   hideSuggests()
 }
@@ -651,8 +544,7 @@ onBeforeUnmount(() => {
   }
 
   document.removeEventListener('click', handleDocumentClick)
-  userMarker?.remove()
-  map?.remove()
+  destroyMap()
 })
 </script>
 
@@ -693,282 +585,10 @@ onBeforeUnmount(() => {
   }
 }
 
-.address-popup__left {
-  padding: 20px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: #0e0d10;
-  overflow-y: auto;
-}
-
-.address-popup__tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 4px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  margin-bottom: 16px;
-}
-
-.address-popup__tab {
-  height: 46px;
-  border-radius: 10px;
-  color: #bcb2b6;
-  font-weight: 500;
-}
-
-.address-popup__tab--active {
-  background: var(--accent-button-bg);
-  color: #fff;
-}
-
-.address-popup__title {
-  margin: 0 0 12px;
-  font-size: 32px;
-  line-height: 1.1;
-}
-
-.address-popup__input,
-.address-popup__textarea {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #121115;
-  color: #f1eced;
-  border-radius: 12px;
-}
-
-.address-popup__address-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-}
-
-.address-popup__suggest-container {
-  position: relative;
-}
-
-.address-popup__suggest-list {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #19171c;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
-  z-index: 3;
-}
-
-.address-popup__suggest-item {
-  padding: 12px 14px;
-  text-align: left;
-  color: #f1eced;
-  transition: background-color 0.2s ease;
-}
-
-.address-popup__suggest-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.address-popup__search {
-  min-width: 112px;
-  height: 50px;
-  padding: 0 16px;
-  border-radius: 12px;
-  background: var(--accent-button-bg);
-  border: 1px solid var(--accent-soft-border);
-  color: #fff;
-}
-
-.address-popup__search:disabled,
-.address-popup__submit:disabled {
-  opacity: 0.55;
-}
-
-.address-popup__hint {
-  margin: 0 0 12px;
-  color: #b9adb2;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.address-popup__hint--error {
-  color: #f2a6a6;
-}
-
-.address-popup__hint--success {
-  color: #9ee0ad;
-}
-
-.address-popup__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.address-popup__input {
-  height: 50px;
-  padding: 0 12px;
-}
-
-.address-popup__field {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.address-popup__label {
-  display: block;
-  margin-bottom: 6px;
-  color: #b9adb2;
-  font-size: 13px;
-}
-
-.address-popup__checkbox-row {
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #d8d0d3;
-  margin: 2px 0;
-}
-
-.address-popup__checkbox {
-  width: 22px;
-  height: 22px;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
-.address-popup__textarea {
-  min-height: 82px;
-  resize: vertical;
-  padding: 10px 12px;
-  margin: 10px 0;
-  font: inherit;
-}
-
-.address-popup__submit {
-  margin-top: 12px;
-  width: 100%;
-  height: 52px;
-  border-radius: 12px;
-  color: #f5f1f2;
-  background: var(--accent-button-bg);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.address-popup__pickup-text {
-  margin: 0;
-  color: #b9adb2;
-  font-size: 16px;
-  line-height: 1.4;
-}
-
-.address-popup__right {
-  padding: 20px;
-  background: #131216;
-  display: flex;
-  flex-direction: column;
-}
-
-.address-popup__map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-right: 56px;
-  margin-bottom: 12px;
-}
-
-.address-popup__map-title {
-  display: block;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.address-popup__map-subtitle {
-  margin: 6px 0 0;
-  color: #b9adb2;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.address-popup__map-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1eced;
-  font-size: 12px;
-}
-
-.address-popup__map-shell {
-  position: relative;
-  flex: 1;
-  min-height: 420px;
-}
-
-.address-popup__map {
-  width: 100%;
-  height: 100%;
-  min-height: 420px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-  background: #18161b;
-}
-
-.address-popup__map--error {
-  background:
-    linear-gradient(135deg, rgba(138, 97, 112, 0.16), transparent),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
-    #18161b;
-}
-
-.address-popup__map-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  text-align: center;
-  color: #f1eced;
-  background: rgba(17, 16, 19, 0.74);
-  backdrop-filter: blur(4px);
-}
-
-.address-popup__map-overlay--error {
-  flex-direction: column;
-  gap: 8px;
-
-  p {
-    margin: 0;
-    max-width: 320px;
-    line-height: 1.45;
-  }
-}
-
 @media (max-width: 1060px) {
   .address-popup {
     grid-template-columns: 1fr;
     min-height: 0;
-  }
-
-  .address-popup__left {
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  .address-popup__right {
-    min-height: 420px;
   }
 }
 
@@ -976,26 +596,6 @@ onBeforeUnmount(() => {
   .address-popup__modal {
     width: calc(100vw - 16px);
     max-height: calc(100vh - 16px);
-  }
-
-  .address-popup__left,
-  .address-popup__right {
-    padding: 14px;
-  }
-
-  .address-popup__title {
-    font-size: 24px;
-  }
-
-  .address-popup__grid,
-  .address-popup__address-row {
-    grid-template-columns: 1fr;
-  }
-
-  .address-popup__map-header {
-    flex-direction: column;
-    gap: 8px;
-    margin-right: 0;
   }
 }
 </style>

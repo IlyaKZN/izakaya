@@ -1,13 +1,19 @@
 ﻿<template>
   <teleport to="body">
     <transition name="popup-fade">
-      <div v-if="modelValue" class="base-popup" @click="handleOverlayClick">
+      <div
+        v-if="modelValue"
+        class="base-popup"
+        @mousedown.self="handleOverlayMouseDown"
+        @click="handleOverlayClick"
+      >
         <div
           class="base-popup__content"
           :class="contentClass"
           role="dialog"
           aria-modal="true"
           @click.stop
+          @mousedown="handleContentMouseDown"
         >
           <button
             v-if="showCloseButton"
@@ -26,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 const props = withDefaults(
   defineProps<{
     modelValue: boolean
@@ -48,13 +56,30 @@ defineOptions({
   name: 'BasePopup',
 })
 
+const overlayMouseDownStarted = ref(false)
+
 const close = () => {
   emit('update:modelValue', false)
   emit('close')
 }
 
-const handleOverlayClick = () => {
-  if (props.closeOnOverlay) {
+const handleOverlayMouseDown = () => {
+  overlayMouseDownStarted.value = true
+}
+
+const handleContentMouseDown = () => {
+  overlayMouseDownStarted.value = false
+}
+
+const handleOverlayClick = (event: MouseEvent) => {
+  const shouldClose =
+    props.closeOnOverlay &&
+    overlayMouseDownStarted.value &&
+    event.target === event.currentTarget
+
+  overlayMouseDownStarted.value = false
+
+  if (shouldClose) {
     close()
   }
 }
