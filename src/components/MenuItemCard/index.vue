@@ -96,8 +96,7 @@ const cartStore = useCartStore()
 
 const defaultVariant = computed(() => getDefaultProductVariant(menuItem))
 const hasMultipleVariants = computed(() => menuItem.variants.length)
-const hasRemovableIngredients = computed(() => menuItem.removable_ingredients.length > 0)
-const canChangeCount = computed(() => !hasMultipleVariants.value && !hasRemovableIngredients.value)
+const canChangeCount = computed(() => !hasMultipleVariants.value)
 const cartItem = computed(() => cartStore.getCartItem(menuItem, defaultVariant.value))
 const productImage = computed(() => getProductImage(menuItem, { thumbnail: true }))
 const variantsLabel = computed(() => getProductVariantsLabel(menuItem))
@@ -109,7 +108,7 @@ const productPrice = computed(() =>
 const productWeight = computed(() => defaultVariant.value?.weight || menuItem.weight || '')
 
 function handlePrimaryAction() {
-  if (hasMultipleVariants.value || hasRemovableIngredients.value) {
+  if (hasMultipleVariants.value) {
     goToItem()
     return
   }
@@ -239,6 +238,7 @@ function handleImageError(event: Event) {
   font-weight: 700;
   letter-spacing: 0.2px;
   min-width: 0;
+  padding-right: 8px;
   white-space: nowrap;
 }
 
@@ -299,7 +299,7 @@ function handleImageError(event: Event) {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 16px;
 }
 
 .menu-item-card__bottom-container--select {
@@ -312,6 +312,7 @@ function handleImageError(event: Event) {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: 4px;
   padding: 3px;
   border-radius: 18px;
   background: rgba(0, 0, 0, 0.2);

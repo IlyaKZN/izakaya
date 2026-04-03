@@ -72,6 +72,7 @@ const router = createRouter({
       path: '/checkout',
       component: CheckoutScreen,
       meta: {
+        requiresAuth: true,
         wideLayout: true,
         transition: 'page-slide',
       },

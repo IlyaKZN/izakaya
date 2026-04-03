@@ -34,11 +34,13 @@
         <section class="checkout-card checkout-card--summary">
           <h2 class="checkout-card__summary-title">Ваш заказ</h2>
 
-          <div class="checkout-card__items">
-            <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
-              <CartItem :item="cartItem" />
-              <div v-if="index !== cartItemList.length - 1" class="checkout-card__separator" />
-            </template>
+          <div class="checkout-card__items-scroll">
+            <div class="checkout-card__items">
+              <template v-for="(cartItem, index) in cartItemList" :key="cartItem.id">
+                <CartItem :item="cartItem" />
+                <div v-if="index !== cartItemList.length - 1" class="checkout-card__separator" />
+              </template>
+            </div>
           </div>
 
           <div class="checkout-card__summary">
@@ -277,9 +279,10 @@ watch(cartItemList, (nextItems) => {
   width: 100%;
   max-width: 1300px;
   margin: 0 auto;
+  min-height: calc(100vh - var(--app-header-height) - 48px);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .checkout-card,
@@ -317,6 +320,8 @@ watch(cartItemList, (nextItems) => {
 }
 
 .checkout-screen__layout {
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
   gap: 24px;
@@ -324,11 +329,11 @@ watch(cartItemList, (nextItems) => {
 }
 
 .checkout-card {
-  padding: 20px;
+  padding: 24px;
 }
 
 .checkout-card__section + .checkout-card__section {
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .checkout-card__switcher {
@@ -337,6 +342,7 @@ watch(cartItemList, (nextItems) => {
   gap: 8px;
   padding: 4px;
   border-radius: 16px;
+  margin-top: 4px;
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -354,12 +360,13 @@ watch(cartItemList, (nextItems) => {
 .checkout-card__field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .checkout-card__field span {
   color: var(--text-secondary);
   font-size: 13px;
+  line-height: 1.25;
 }
 
 .checkout-card__input,
@@ -373,20 +380,22 @@ watch(cartItemList, (nextItems) => {
 
 .checkout-card__input {
   height: 44px;
-  padding: 0 12px;
+  padding: 0 14px;
 }
 
 .checkout-card__textarea {
-  min-height: 96px;
-  padding: 12px;
+  min-height: 112px;
+  padding: 14px;
   resize: vertical;
   font: inherit;
+  line-height: 1.45;
 }
 
 .checkout-card__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px;
+  margin-top: 14px;
 }
 
 .checkout-card__address-button,
@@ -398,12 +407,12 @@ watch(cartItemList, (nextItems) => {
 
 .checkout-card__address-button {
   width: 100%;
-  min-height: 46px;
-  padding: 0 14px;
+  min-height: 56px;
+  padding: 0 16px;
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-start;
 }
 
@@ -416,21 +425,23 @@ watch(cartItemList, (nextItems) => {
 .checkout-card__promo-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
 .checkout-card__promo-button {
   min-width: 120px;
   border-radius: 14px;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .checkout-card__checkbox-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   color: var(--text-secondary);
+  line-height: 1.35;
 }
 
 .checkout-card__checkbox-row input {
@@ -438,12 +449,14 @@ watch(cartItemList, (nextItems) => {
 }
 
 .checkout-card__notice {
-  padding: 12px 14px;
+  margin-top: 16px;
+  padding: 14px 16px;
   border-radius: 14px;
   background: var(--accent-soft);
   border: 1px solid var(--accent-soft-border);
   color: #f0dde3;
   font-size: 13px;
+  line-height: 1.4;
 }
 
 .checkout-card__notice--error {
@@ -454,6 +467,18 @@ watch(cartItemList, (nextItems) => {
 .checkout-card--details {
   position: sticky;
   top: calc(var(--app-header-height) + 24px);
+  max-height: calc(100vh - var(--app-header-height) - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.checkout-card--summary {
+  position: sticky;
+  top: calc(var(--app-header-height) + 24px);
+  max-height: calc(100vh - var(--app-header-height) - 48px);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .checkout-card__summary-title {
@@ -462,7 +487,7 @@ watch(cartItemList, (nextItems) => {
 }
 
 .checkout-card__details-title {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   font-size: 24px;
 }
 
@@ -470,6 +495,15 @@ watch(cartItemList, (nextItems) => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.checkout-card__items-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 8px;
+  margin-right: -8px;
 }
 
 .checkout-card__separator {
@@ -505,6 +539,7 @@ watch(cartItemList, (nextItems) => {
   margin-top: 18px;
   border-radius: 16px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .checkout-card__submit:disabled {
@@ -543,18 +578,36 @@ watch(cartItemList, (nextItems) => {
 }
 
 @media (max-width: 1080px) {
+  .checkout-screen {
+    min-height: auto;
+  }
+
   .checkout-screen__layout {
+    flex: none;
     grid-template-columns: 1fr;
   }
 
+  .checkout-card--summary,
   .checkout-card--details {
     position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .checkout-card__items-scroll {
+    overflow: visible;
+    padding-right: 0;
+    margin-right: 0;
   }
 }
 
 @media (max-width: 640px) {
   .checkout-card {
-    padding: 14px;
+    padding: 18px;
+  }
+
+  .checkout-screen {
+    gap: 12px;
   }
 
   .checkout-card__grid,

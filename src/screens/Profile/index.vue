@@ -26,15 +26,26 @@
           </p>
         </div>
 
-        <div class="profile-screen__hero-stats">
-          <div class="profile-screen__stat">
-            <span class="profile-screen__stat-value">{{ myOrders.length }}</span>
-            <span class="profile-screen__stat-label">Заказов</span>
+        <div class="profile-screen__hero-side">
+          <div class="profile-screen__hero-stats">
+            <div class="profile-screen__stat">
+              <span class="profile-screen__stat-value">{{ myOrders.length }}</span>
+              <span class="profile-screen__stat-label">Заказов</span>
+            </div>
+            <div class="profile-screen__stat">
+              <span class="profile-screen__stat-value">{{ activeOrdersCount }}</span>
+              <span class="profile-screen__stat-label">Активных</span>
+            </div>
           </div>
-          <div class="profile-screen__stat">
-            <span class="profile-screen__stat-value">{{ activeOrdersCount }}</span>
-            <span class="profile-screen__stat-label">Активных</span>
-          </div>
+
+          <button
+            type="button"
+            class="profile-screen__logout"
+            :disabled="isLoggingOut"
+            @click="handleLogout"
+          >
+            {{ isLoggingOut ? 'Выходим...' : 'Выйти из аккаунта' }}
+          </button>
         </div>
       </section>
 
@@ -121,6 +132,10 @@
           </article>
         </div>
       </section>
+
+      <div v-if="logoutError" class="profile-screen__state-error">
+        {{ logoutError }}
+      </div>
     </template>
   </div>
 </template>
@@ -128,7 +143,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useOrdersStore } from '@/stores/orders'
 import { useUsersStore } from '@/stores/users'
@@ -138,6 +153,7 @@ defineOptions({
   name: 'ProfileScreen',
 })
 
+const router = useRouter()
 const authStore = useAuthStore()
 const usersStore = useUsersStore()
 const ordersStore = useOrdersStore()
@@ -149,6 +165,8 @@ const { myOrders } = storeToRefs(ordersStore)
 const isLoading = ref(false)
 const hasLoadedOnce = ref(false)
 const errorMessage = ref('')
+const isLoggingOut = ref(false)
+const logoutError = ref('')
 let profilePollingId: ReturnType<typeof setInterval> | null = null
 
 const profileName = computed(() => profile.value?.name || 'Гость')
@@ -226,6 +244,22 @@ const loadProfilePage = async () => {
   }
 }
 
+const handleLogout = async () => {
+  isLoggingOut.value = true
+  logoutError.value = ''
+
+  try {
+    await authStore.logout()
+    usersStore.clearProfile()
+    ordersStore.clearOrders()
+    void router.push({ name: 'main' })
+  } catch (error) {
+    logoutError.value = error instanceof Error ? error.message : 'Не удалось выйти из аккаунта.'
+  } finally {
+    isLoggingOut.value = false
+  }
+}
+
 onMounted(() => {
   void loadProfilePage()
   profilePollingId = setInterval(() => {
@@ -279,6 +313,13 @@ onBeforeUnmount(() => {
     var(--surface-1);
 }
 
+.profile-screen__hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
 .profile-screen__eyebrow {
   margin: 0 0 8px;
   color: var(--text-secondary);
@@ -303,6 +344,31 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: repeat(2, minmax(120px, 1fr));
   gap: 12px;
+}
+
+.profile-screen__logout {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.1s ease,
+    border-color 0.1s ease,
+    background-color 0.1s ease;
+}
+
+.profile-screen__logout:hover {
+  transform: translateY(-1px);
+  border-color: rgba(127, 46, 67, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.profile-screen__logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .profile-screen__stat {
@@ -478,10 +544,23 @@ onBeforeUnmount(() => {
   background: var(--accent-button-bg);
 }
 
+.profile-screen__state-error {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(176, 63, 63, 0.18);
+  border: 1px solid rgba(176, 63, 63, 0.35);
+  color: #ffd0d0;
+  line-height: 1.4;
+}
+
 @media (max-width: 960px) {
   .profile-screen__hero,
   .profile-screen__layout {
     grid-template-columns: 1fr;
+  }
+
+  .profile-screen__hero-side {
+    width: 100%;
   }
 
   .profile-order__details {

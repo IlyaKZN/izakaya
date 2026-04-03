@@ -4,12 +4,6 @@
       <div class="header__bar">
         <div class="header__brand-group">
           <RouterLink class="header__brand" :to="{ name: 'main' }" aria-label="Перейти на главную">
-            <span class="header__brand-badge">
-              <span class="header__brand-badge-top">viet</span>
-              <span class="header__brand-badge-main">kitchen</span>
-              <span class="header__brand-badge-bottom">delivery</span>
-            </span>
-
             <span class="header__brand-copy">
               <span class="header__brand-mark">VIET KITCHEN</span>
               <span class="header__brand-subtitle">вьетнамская кухня с доставкой</span>
@@ -153,31 +147,6 @@ const isAuthPopupOpen = ref(false)
   min-width: 0;
   color: inherit;
   text-decoration: none;
-}
-
-.header__brand-badge {
-  width: 70px;
-  height: 70px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(127, 46, 67, 0.95), rgba(84, 29, 45, 0.96) 62%, rgba(28, 17, 22, 0.98) 100%);
-  color: #f5d7df;
-  text-transform: lowercase;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 22px rgba(0, 0, 0, 0.22);
-}
-
-.header__brand-badge-top,
-.header__brand-badge-bottom {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
 }
 
 .header__brand-badge-main {

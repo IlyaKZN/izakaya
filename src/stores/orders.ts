@@ -41,6 +41,12 @@ export const useOrdersStore = defineStore('orders', () => {
     return response
   }
 
+  function clearOrders() {
+    myOrders.value = []
+    ordersById.value = {}
+    createdOrder.value = null
+  }
+
   return {
     myOrders,
     ordersById,
@@ -49,5 +55,6 @@ export const useOrdersStore = defineStore('orders', () => {
     createOrder,
     fetchMyOrders,
     fetchOrder,
+    clearOrders,
   }
 })
